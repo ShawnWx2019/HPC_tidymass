@@ -19,7 +19,7 @@ library(IMOtoolkits)
 
 setwd("demo/")
 
-load("neg_object")
+load("object.neg")
 
 object.neg <- object
 
@@ -106,7 +106,7 @@ peak_distribution <- function(object) {
 
 
 
-# 1.run positive model ---------------------------------------------------------------------
+# 1.run negative model ---------------------------------------------------------------------
 
 object.neg = add_sample_info(
   object = object.neg,
@@ -142,12 +142,14 @@ plt_mv_raw.neg<-
   show_sample_missing_values(object = object.neg, percentage = TRUE,color_by = 'group',order_by = 'injection.order')+theme1+
   geom_hline(yintercept = 80,color = "red",linetype="dashed")+
   ylim(c(0,100))+
+  scale_size_continuous(range = c(0.1, 2)) +
+  ggsci::scale_color_aaas()+
   theme(axis.text.x = element_text(size = 3))
 
 ggsave(filename = "01.raw/NEG/missing_value_distribution.png",plot = plt_mv_raw.neg,width = 10,height = 5)
-ggsave(filename = "01.raw/NEG/missing_value_distribution.png",plot = plt_mv_raw.neg,width = 10,height = 5)
+ggsave(filename = "01.raw/NEG/missing_value_distribution.pdf",plot = plt_mv_raw.neg,width = 10,height = 5)
 
-
+plotly::ggplotly(plt_mv_raw.neg)
 # 1.2 Outlier detect and remove outliers ----------------------------------
 
 outlier_samples.neg <-
@@ -162,12 +164,51 @@ outlier_table.neg <-
 
 out_name.neg <-
   outlier_table.neg %>%
-  apply(1, function(x){
-    sum(x)
-  }) %>%
-  `>`(0) %>%
-  which()%>% names
+  filter(according_to_na == TRUE) %>% 
+  rownames()
 
+##> remove outlier based on 
 if(length(out_name.neg) != 0) {
-  
+  object.neg <- 
+    object.neg %>% 
+    activate_mass_dataset('expression_data') %>% 
+    select(-all_of(out_name.neg))
 }
+
+qc_id = object.neg %>%
+  activate_mass_dataset(what = "sample_info") %>%
+  filter(class == "QC") %>%
+  pull(sample_id)
+
+object.neg <-
+  object.neg %>%
+  mutate_variable_na_freq(according_to_samples = qc_id)
+##> na frequence is less than 0.2 in qc samples.
+object.neg.mv <-
+  object.neg %>%
+  activate_mass_dataset(what = "variable_info") %>%
+  filter(na_freq < 0.2)
+
+dir.create("02.remove_noise/NEG",showWarnings = F,recursive = T)
+save(object.neg.mv,file = "02.remove_noise/NEG/object.neg.mv")
+
+plt_mv_remove_noise.neg<-
+  show_sample_missing_values(object = object.neg.mv, percentage = TRUE,color_by = 'group',order_by = 'injection.order')+theme1+
+  geom_hline(yintercept = 80,color = "red",linetype="dashed")+
+  ylim(c(0,100))+
+  theme(axis.text.x = element_text(size = 8,angle = 90)) +
+  scale_size_continuous(range = c(0.1, 2)) +
+  ggsci::scale_color_aaas()+
+  theme(axis.text.x = element_text(size = 3))
+
+ggsave(filename = "02.remove_noise//NEG/plt_mv_remove_noise.neg.png",plot = plt_mv_remove_noise.neg,width = 10,height = 5)
+ggsave(filename = "02.remove_noise//NEG/plt_mv_remove_noise.neg.pdf",plot = plt_mv_remove_noise.neg,width = 10,height = 5)
+
+
+# impute mv ---------------------------------------------------------------
+object.neg.impute =
+  object.neg.mv %>%
+  impute_mv(method = 'knn')
+dir.create("03.impute_mv/NEG",showWarnings = F,recursive = T)
+save(object.neg.impute,file = "03.impute_mv/NEG/object.neg.impute")
+

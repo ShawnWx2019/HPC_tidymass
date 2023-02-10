@@ -103,7 +103,7 @@ else
 fi
     
 
-## step2. convert .raw to mzXML and mgf format
+## step2. convert .raw to mzXML and .mgf format
 
 echo -e "\033[32m====================================================\nStep2 Convert .raw file to .mzXML and .mgf\n==================================================== \033[0m"
 
@@ -116,12 +116,12 @@ then
     mkdir -p ${out_put_dir}/MS1/POS/QC ${out_put_dir}/MS1/POS/Subject ${out_put_dir}/MS1/NEG/QC ${out_put_dir}/MS1/NEG/Subject
     mkdir -p ${out_put_dir}/MS2/POS/QC ${out_put_dir}/MS2/POS/Subject ${out_put_dir}/MS2/NEG/QC ${out_put_dir}/MS2/NEG/Subject
     echo -e "\033[32m====================================================\nParalle run.\n==================================================== \033[0m"
-    parallel --xapply bash ~/01.src/02.script/02.Tidymass/01.msconvert.sh ::: ${pos_dir_raw}/QC ${pos_dir_raw}/Subject ${neg_dir_raw}/QC ${neg_dir_raw}/Subject \
+    parallel --xapply -j 50 bash ~/01.src/02.script/02.Tidymass/01.msconvert.sh ::: ${pos_dir_raw}/QC ${pos_dir_raw}/Subject ${neg_dir_raw}/QC ${neg_dir_raw}/Subject \
                                                                  ::: ${out_put_dir}/MS1/POS/QC ${out_put_dir}/MS1/POS/Subject ${out_put_dir}/MS1/NEG/QC ${out_put_dir}/MS1/NEG/Subject
     
     echo -e "\033[32mMS1 transform finish!\033[0m"
 
-    parallel --xapply bash ~/01.src/02.script/02.Tidymass/03.ms2convert.sh ::: ${pos_dir_raw}/QC ${pos_dir_raw}/Subject ${neg_dir_raw}/QC ${neg_dir_raw}/Subject \
+    parallel --xapply -j 50 bash ~/01.src/02.script/02.Tidymass/03.ms2convert.sh ::: ${pos_dir_raw}/QC ${pos_dir_raw}/Subject ${neg_dir_raw}/QC ${neg_dir_raw}/Subject \
                                                                  ::: ${out_put_dir}/MS2/POS/QC ${out_put_dir}/MS2/POS/Subject ${out_put_dir}/MS2/NEG/QC ${out_put_dir}/MS2/NEG/Subject
     echo -e "\033[32mMS2 transform finish!\033[0m"
 else
