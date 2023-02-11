@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.2.269">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Shawn">
+<meta name="dcterms.date" content="2023-02-11">
+
+<title>HPC_tidymass流程开发</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1.6em;
+  vertical-align: middle;
+}
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { color: #008000; } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { color: #008000; font-weight: bold; } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+</style>
+
+
+<script src="pipeline_files/libs/clipboard/clipboard.min.js"></script>
+<script src="pipeline_files/libs/quarto-html/quarto.js"></script>
+<script src="pipeline_files/libs/quarto-html/popper.min.js"></script>
+<script src="pipeline_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="pipeline_files/libs/quarto-html/anchor.min.js"></script>
+<link href="pipeline_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="pipeline_files/libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="pipeline_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="pipeline_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="pipeline_files/libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script src="pipeline_files/libs/quarto-diagram/mermaid.min.js"></script>
+<script src="pipeline_files/libs/quarto-diagram/mermaid-init.js"></script>
+<link href="pipeline_files/libs/quarto-diagram/mermaid.css" rel="stylesheet">
+
+
+</head>
+
+<body class="fullcontent">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">HPC_tidymass流程开发</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>Shawn </p>
+          </div>
+  </div>
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">February 11, 2023</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+</header>
+
+<center>
+<p><font color="salmon" size="2pt"> 🏡Zhang Lab, February, 2023 🏡</font></p>
+<p><font color="green" size="2pt"> 🔬Multi-omics research center, HENU, Kaifeng, Henan 🔬</font></p>
+<p><font color="green" size="2pt"> 🔬State Key Laboratory of Crop Stress Adaption and Improvement, HENU, Kaifeng, Henan 🔬</font></p>
+</center>
+<section id="需要搭建的环境" class="level1">
+<h1>需要搭建的环境：</h1>
+<p>首先联系管理员开通linux账户。然后并将账户添加到<code>bio</code>和<code>docker</code>用户组。<code>bio</code>账户是我们上传原始数据的账户，在数据格式转换的时候需要用到<code>docker</code>,在linux系统下，只有<code>root</code>账号可以使用<code>docker</code>，这时我们需要创建一个<code>docker</code>的用户组，将需要使用<code>tidymass</code>流程账号纳入<code>docker group</code>。<br>
+检查是否属于<code>docker</code> 用户组可以通过在终端输入<code>groups</code>进行组别查看：</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>shawn<span class="sc">@</span>bio<span class="sc">-</span>Super<span class="sc">-</span>Server<span class="sc">:</span><span class="er">~$</span> groups</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>root sudo docker bio teacher</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>其次需要安装<code>tidyvers</code>,<code>tidymass</code>以及我写的<code>MDAtoolkits</code>和<code>IMOtoolkits</code>包。同样通过下列代码查看依赖包是否安装好。</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>shawn<span class="sc">@</span>bio<span class="sc">-</span>Super<span class="sc">-</span>Server<span class="sc">:</span><span class="er">~$</span> R <span class="do">## 终端输入R回车</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>R version <span class="dv">4</span>.<span class="fl">1.2</span> (<span class="dv">2021-11-01</span>) <span class="sc">--</span> <span class="st">"Bird Hippie"</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="fu">Copyright</span> (C) <span class="dv">2021</span> The R Foundation <span class="cf">for</span> Statistical Computing</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>Platform<span class="sc">:</span> x86_64<span class="sc">-</span>pc<span class="sc">-</span>linux<span class="sc">-</span><span class="fu">gnu</span> (<span class="dv">64</span><span class="sc">-</span>bit)</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>R is free software and comes with ABSOLUTELY NO WARRANTY.</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>You are welcome to redistribute it under certain conditions.</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>Type <span class="st">'license()'</span> or <span class="st">'licence()'</span> <span class="cf">for</span> distribution details.</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>R is a collaborative project with many contributors.</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>Type <span class="st">'contributors()'</span> <span class="cf">for</span> more information and</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a><span class="st">'citation()'</span> on how to cite R or R packages <span class="cf">in</span> publications.</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>Type <span class="st">'demo()'</span> <span class="cf">for</span> some demos, <span class="st">'help()'</span> <span class="cf">for</span> on<span class="sc">-</span>line help, or</span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a><span class="st">'help.start()'</span> <span class="cf">for</span> an HTML browser interface to help.</span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>Type <span class="st">'q()'</span> to quit R.</span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a><span class="do">##&gt; 加载包，没有ERROR报错说明装好了。</span></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidymass)</span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(MDAtoolkits)</span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(IMOtoolkits)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>环境初始化: 首先通过下列命令创建脚本存放路径</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>cd <span class="do">## 回到家目录</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="do">##&gt; 第一步 创建脚本存放路径</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>mkdir <span class="sc">-</span>p <span class="sc">/</span><span class="fl">01.</span>src<span class="sc">/</span><span class="fl">02.</span>script<span class="sc">/</span><span class="fl">02.</span>Tidymass</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="do">##&gt; 第二步 通过sftp将脚本文件上传到该路径</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="do">##&gt; 第三步 输入下面代码把脚本写进环境变量，添加alias</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>echo <span class="st">'alias peakpicking="Rscript ~/01.src/02.script/02.Tidymass/02.PeakPicking.R"'</span> <span class="sc">&gt;</span><span class="er">&gt;</span> <span class="er">~/</span>.bash_alias</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>echo <span class="st">"alias ms1convert='bash ~/01.src/02.script/02.Tidymass/01.msconvert.sh'"</span><span class="sc">&gt;</span><span class="er">&gt;</span> <span class="er">~/</span>.bash_alias</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>echo <span class="st">"alias ms2convert='bash ~/01.src/02.script/02.Tidymass/03.ms2convert.sh'"</span> <span class="sc">&gt;</span><span class="er">&gt;</span> <span class="er">~/</span>.bash_alias</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>echo <span class="st">"alias runTidymass='bash ~/01.src/02.script/02.Tidymass/runTidymass.sh'"</span> <span class="sc">&gt;</span><span class="er">&gt;</span> <span class="er">~/</span>.bash_alias</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>echo <span class="st">"alias datacleaning='Rscript ~/01.src/02.script/02.Tidymass/04.dataclean.R'"</span> <span class="sc">&gt;</span><span class="er">&gt;</span> <span class="er">~/</span>.bash_alias</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>echo <span class="st">"alias feature_anno='Rscript ~/01.src/02.script/02.Tidymass/05.feature_anno'"</span> <span class="sc">&gt;</span><span class="er">&gt;</span> <span class="er">~/</span>.bash_alias</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>echo <span class="st">"alias feature_downstream='Rscript ~/01.src/02.script/02.Tidymass/06.feature_downstream.R'"</span> <span class="sc">&gt;</span><span class="er">&gt;</span> <span class="er">~/</span>.bash_alias</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>echo <span class="st">"source ~/.bash_alias"</span> <span class="sc">&gt;</span><span class="er">&gt;</span> <span class="er">~/</span>.bashrc</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>source <span class="sc">~</span><span class="er">/</span>.bashrc</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>至此分析环境搭建完毕。</p>
+</section>
+<section id="标准流程" class="level1">
+<h1>标准流程：</h1>
+<table class="table">
+<colgroup>
+<col style="width: 20%">
+<col style="width: 20%">
+<col style="width: 20%">
+<col style="width: 20%">
+<col style="width: 20%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>步骤</th>
+<th>描述</th>
+<th>脚本名称</th>
+<th>状态</th>
+<th>改进方向</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>1</td>
+<td>下机数据转换为开源格式.mzXML</td>
+<td>01.msconvert.sh</td>
+<td><font color="green">正常</font></td>
+<td>效率较低，优化并行</td>
+</tr>
+<tr class="even">
+<td>2</td>
+<td>下机数据转换为开源格式.mgf</td>
+<td>03.ms2convert.sh</td>
+<td><font color="green">正常</font></td>
+<td>效率较低，优化并行</td>
+</tr>
+<tr class="odd">
+<td>3</td>
+<td>feature提取</td>
+<td>02.PeakPicking.R</td>
+<td><font color="green">正常</font></td>
+<td>无</td>
+</tr>
+<tr class="even">
+<td>4</td>
+<td>数据清洗</td>
+<td>04.dataclean.R</td>
+<td><font color="green">正常</font></td>
+<td>目前没有遇到bug，依据项目改进</td>
+</tr>
+<tr class="odd">
+<td>5</td>
+<td>化合物注释，分类</td>
+<td>05.feature_anno.R</td>
+<td><font color="blue">待优化</font></td>
+<td>提高MS1搜库效率，联系Dr. Shen</td>
+</tr>
+<tr class="even">
+<td>6</td>
+<td>下游分析</td>
+<td>06.feature_downstream.sh</td>
+<td><font color="blue">待优化</font></td>
+<td>目前包括差异分析，富集分析</td>
+</tr>
+<tr class="odd">
+<td>7</td>
+<td>报告生产</td>
+<td>07.report.R</td>
+<td><font color="red">待启动</font></td>
+<td>确定了下游分析对象后自动化生成</td>
+</tr>
+<tr class="even">
+<td>8</td>
+<td>一键流程</td>
+<td>runTidymass.sh</td>
+<td><font color="purple">开发中</font></td>
+<td>断点继续的判断</td>
+</tr>
+<tr class="odd">
+<td>9</td>
+<td>shinyapp开发</td>
+<td>runTidymass_shiny</td>
+<td><font color="purple">未启动</font></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<section id="标准流程图" class="level2">
+<h2 class="anchored" data-anchor-id="标准流程图">标准流程图：</h2>
+<p>下面所说的对象为<code>tidymass</code>构建的<code>S4</code>对象,被称为<code>massdataset</code>，其中包含了所有<code>feature</code>的质谱信息、表达水平、测试材料信息等。</p>
+<div class="cell">
+<div class="cell-output-display">
+<div>
+<p>
+</p><pre class="mermaid mermaid-js" data-tooltip-selector="#mermaid-tooltip-1">flowchart TB
+  A[下机原始数据] -- 01.msconvert.sh --&gt; B[开源格式.mzXML]
+  A[下机原始数据.raw] -- 03.ms2convert.sh --&gt; C[开源格式.mgf]
+  B[开源格式.mzXML] -- 02.PeakPicking.R --&gt; D[原始对象]
+  D[初始对象] -- 04.dataclean.R --&gt; E[过滤后对象]
+  E[过滤后对象] -- 05.feature_anno.R --&gt; F[注释后对象]
+  C[开源格式.mgf] -- 05.feature_anno.R --&gt; F[注释后对象]
+  F[注释后对象] --06.feature_downstream.sh --&gt; G[下游分析]
+  G[下游分析] --07.report.R --&gt; H[生成报告]
+</pre>
+<div id="mermaid-tooltip-1" class="mermaidTooltip">
+
+</div>
+<p></p>
+</div>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="sc">--------------------</span> </span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>massdataset version<span class="sc">:</span> <span class="dv">1</span>.<span class="fl">0.5</span> </span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="sc">--------------------</span> </span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="fl">1.</span>expression_data<span class="sc">:</span>[ <span class="dv">5105</span> x <span class="dv">244</span> data.frame]</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="fl">2.</span>sample_info<span class="sc">:</span>[ <span class="dv">244</span> x <span class="dv">4</span> data.frame]</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="fl">3.</span>variable_info<span class="sc">:</span>[ <span class="dv">5105</span> x <span class="dv">3</span> data.frame]</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="fl">4.</span>sample_info_note<span class="sc">:</span>[ <span class="dv">4</span> x <span class="dv">2</span> data.frame]</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="fl">5.</span>variable_info_note<span class="sc">:</span>[ <span class="dv">3</span> x <span class="dv">2</span> data.frame]</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a><span class="fl">6.</span>ms2_data<span class="sc">:</span>[ <span class="dv">0</span> variables x <span class="dv">0</span> MS2 spectra]</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="sc">--------------------</span> </span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>Processing <span class="fu">information</span> (<span class="fu">extract_process_info</span>())</span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a><span class="dv">2</span> processings <span class="cf">in</span> total</span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>create_mass_dataset <span class="sc">----------</span> </span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>      Package         Function.used                Time</span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a><span class="dv">1</span> massdataset <span class="fu">create_mass_dataset</span>() <span class="dv">2022-12-06</span> <span class="dv">08</span><span class="sc">:</span><span class="dv">50</span><span class="sc">:</span><span class="dv">25</span></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>process_data <span class="sc">----------</span> </span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>        Package Function.used                Time</span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a><span class="dv">1</span> massprocesser  process_data <span class="dv">2022-12-06</span> <span class="dv">08</span><span class="sc">:</span><span class="dv">32</span><span class="sc">:</span><span class="dv">23</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="使用方法" class="level2">
+<h2 class="anchored" data-anchor-id="使用方法">使用方法</h2>
+<section id="数据准备" class="level3">
+<h3 class="anchored" data-anchor-id="数据准备">数据准备</h3>
+<ul>
+<li><p>在实验准备前，先对样品进行编号匹配，样品编号统一为<code>S_0001 --&gt; S_1000</code>类型，注意这里需要用<code>0</code>补齐,因为linux系统下默认按文件名排序，如果不加<code>pad</code>顺序会是<code>S_1 S_10 S_11 .... S_2 S_20 S_21...</code>造成不必要的错误。<code>pad</code>数量根据样本量的大小补充，三位数补充两位，四位数补充3位。同样<code>QC</code>编号为<code>QC_01 ... QC_20</code>;</p></li>
+<li><p>文件结构,对于正负谱同时采的项目，将所有<code>.raw</code>文件放到一个文件夹下，用<code>bio</code>账号拷贝到<code>/home/data/public/02.rawdata/03.Metabolomics/kq-1</code>路径下。</p></li>
+<li><p>文件结构,对于正负谱分开采的项目，首先新建两个文件夹，一个为<code>NEG</code>,另一个位<code>POS</code>,分别将正负谱的结果放入对应的文件夹，然后拷贝。</p></li>
+</ul>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>shawn<span class="sc">@</span>bio<span class="sc">-</span>Super<span class="sc">-</span>Server<span class="sc">:</span><span class="er">~/</span>public<span class="sc">/</span><span class="fl">02.</span>rawdata<span class="sc">/</span><span class="fl">03.</span>Metabolomics<span class="sc">$</span> tree <span class="sc">-</span>d kq<span class="dv">-1</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>kq<span class="dv">-1</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="sc">|</span>___ NEG</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="sc">|</span>___ POS</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>必须严格按照命名规则和文件格式准备，<code>QC, S, NEG, POS</code>均为大写，<code>_</code>为下划线。</p>
+</section>
+<section id="脚本运行" class="level3">
+<h3 class="anchored" data-anchor-id="脚本运行">脚本运行</h3>
+<p>目前一键运行脚本已经开发到全部完成<code>1-4</code>步骤,并且具有断点续跑的功能。所以可以通过<code>runTidymass.sh</code>进行<code>1-4</code>步骤。</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="sc">/</span>home<span class="sc">/</span>data<span class="sc">/</span>shawn<span class="sc">/</span><span class="fl">01.</span>src<span class="sc">/</span><span class="fl">02.</span>script<span class="sc">/</span><span class="fl">02.</span>Tidymass<span class="sc">/</span>runTidymass.sh<span class="sc">:</span> option requires an argument <span class="sc">--</span> h</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>Tidymass pipeline part1. Date transform and peak picking</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="sc">@</span>Usage<span class="sc">:</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="sc">-------------------------------</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>runTidymass [<span class="sc">-</span>i input] [<span class="sc">-</span>t type] [<span class="sc">-</span>c column]</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="sc">-------------------------------</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="er">@</span>Author Shawn <span class="fu">Wang</span> (shawnwang2016<span class="sc">@</span><span class="fl">126.</span>com)</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a><span class="sc">-------------------------------</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a><span class="er">@</span>Date Tus Feb <span class="dv">09</span>, <span class="dv">2023</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a><span class="sc">-------------------------------</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a><span class="er">@</span>Version V.<span class="dv">0</span>.<span class="dv">0</span>.<span class="fl">0.99</span> beta</span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a><span class="sc">-------------------------------</span></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a><span class="er">@</span>Description</span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a><span class="sc">-------------------------------</span></span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>[<span class="sc">-</span>i]<span class="sc">:</span>input,   The file path of .raw data</span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>[<span class="sc">-</span>t]<span class="sc">:</span>type,    The type of ion model, <span class="dv">1</span><span class="sc">:</span> NEG<span class="sc">+</span>POS <span class="cf">in</span> one file, <span class="dv">2</span><span class="sc">:</span> NEG and POS <span class="cf">in</span> differnet files</span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>[<span class="sc">-</span>c]<span class="sc">:</span>column,  rp or hilic</span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a><span class="sc">-------------------------------</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>目前需要的参数：</p>
+<p><font color="green"><strong>-i | input</strong></font>：原始数据存放路径，一般为在<code>/home/data/public/02.rawdata/03.Metabolomics/xxx</code>。</p>
+<p><font color="green"><strong>-t | type</strong></font>：采集模式，1：为正负谱同时采集，2：正负谱分开采集。</p>
+<p><font color="green"><strong>-c | column</strong></font>：柱子型号，rp 还是 hilic。</p>
+</section>
+<section id="输出结果文件结构" class="level3">
+<h3 class="anchored" data-anchor-id="输出结果文件结构">输出结果文件结构</h3>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>shawn<span class="sc">@</span>bio<span class="sc">-</span>Super<span class="sc">-</span>Server<span class="sc">:</span><span class="er">~/</span><span class="fl">02.</span>project<span class="sc">/</span><span class="fl">13.</span>kq1<span class="sc">$</span> tree <span class="sc">-</span>d test<span class="sc">/</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>test<span class="sc">/</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>└── working_dir</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>    ├── <span class="fl">01.</span>data</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>    │&nbsp;&nbsp; └── rawdata</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>    │&nbsp;&nbsp;     ├── NEG</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>    │&nbsp;&nbsp;     │&nbsp;&nbsp; ├── QC</span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>    │&nbsp;&nbsp;     │&nbsp;&nbsp; └── Subject</span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>    │&nbsp;&nbsp;     └── POS</span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>    │&nbsp;&nbsp;         ├── QC</span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>    │&nbsp;&nbsp;         └── Subject</span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>    ├── <span class="fl">02.</span>progress</span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>    │&nbsp;&nbsp; ├── Data_cleaning</span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>    │&nbsp;&nbsp; ├── annotation</span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>    │&nbsp;&nbsp; ├── peak_picking</span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>    │&nbsp;&nbsp; │&nbsp;&nbsp; ├── NEG</span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>    │&nbsp;&nbsp; │&nbsp;&nbsp; │&nbsp;&nbsp; └── Result</span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a>    │&nbsp;&nbsp; │&nbsp;&nbsp; │&nbsp;&nbsp;     └── intermediate_data</span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a>    │&nbsp;&nbsp; │&nbsp;&nbsp; └── POS</span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a>    │&nbsp;&nbsp; │&nbsp;&nbsp;     └── Result</span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a>    │&nbsp;&nbsp; │&nbsp;&nbsp;         └── intermediate_data</span>
+<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a>    │&nbsp;&nbsp; └── transform</span>
+<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a>    │&nbsp;&nbsp;     ├── MS1</span>
+<span id="cb7-24"><a href="#cb7-24" aria-hidden="true" tabindex="-1"></a>    │&nbsp;&nbsp;     │&nbsp;&nbsp; ├── NEG</span>
+<span id="cb7-25"><a href="#cb7-25" aria-hidden="true" tabindex="-1"></a>    │&nbsp;&nbsp;     │&nbsp;&nbsp; │&nbsp;&nbsp; ├── QC</span>
+<span id="cb7-26"><a href="#cb7-26" aria-hidden="true" tabindex="-1"></a>    │&nbsp;&nbsp;     │&nbsp;&nbsp; │&nbsp;&nbsp; └── Subject</span>
+<span id="cb7-27"><a href="#cb7-27" aria-hidden="true" tabindex="-1"></a>    │&nbsp;&nbsp;     │&nbsp;&nbsp; └── POS</span>
+<span id="cb7-28"><a href="#cb7-28" aria-hidden="true" tabindex="-1"></a>    │&nbsp;&nbsp;     │&nbsp;&nbsp;     ├── QC</span>
+<span id="cb7-29"><a href="#cb7-29" aria-hidden="true" tabindex="-1"></a>    │&nbsp;&nbsp;     │&nbsp;&nbsp;     └── Subject</span>
+<span id="cb7-30"><a href="#cb7-30" aria-hidden="true" tabindex="-1"></a>    │&nbsp;&nbsp;     └── MS2</span>
+<span id="cb7-31"><a href="#cb7-31" aria-hidden="true" tabindex="-1"></a>    │&nbsp;&nbsp;         ├── NEG</span>
+<span id="cb7-32"><a href="#cb7-32" aria-hidden="true" tabindex="-1"></a>    │&nbsp;&nbsp;         │&nbsp;&nbsp; ├── QC</span>
+<span id="cb7-33"><a href="#cb7-33" aria-hidden="true" tabindex="-1"></a>    │&nbsp;&nbsp;         │&nbsp;&nbsp; └── Subject</span>
+<span id="cb7-34"><a href="#cb7-34" aria-hidden="true" tabindex="-1"></a>    │&nbsp;&nbsp;         └── POS</span>
+<span id="cb7-35"><a href="#cb7-35" aria-hidden="true" tabindex="-1"></a>    │&nbsp;&nbsp;             ├── QC</span>
+<span id="cb7-36"><a href="#cb7-36" aria-hidden="true" tabindex="-1"></a>    │&nbsp;&nbsp;             └── Subject</span>
+<span id="cb7-37"><a href="#cb7-37" aria-hidden="true" tabindex="-1"></a>    └── <span class="fl">03.</span>result</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+</section>
+</section>
+<section id="目前的问题" class="level1">
+<h1>目前的问题：</h1>
+<p>Q1. 格式转换速度比较慢，目前搞清楚的问题来源是通过<code>docker</code>运行<code>msconvert</code>不同同时处理多个原始数据文件。</p>
+<p>M1. 尝试并行，准备好原始数据后迭代，但可能开大量虚拟机对服务器负载要求较高。第二个方案是在windows下直接用<code>msconvert</code>转换，这种方法可以同时转换大量原始数据。</p>
+<p>Q2. 正负谱同时采集的数据用tidymass提峰结果又很大问题。目前原因不明，需要进一步检查结果</p>
+</section>
+<section id="计划" class="level1">
+<h1>计划</h1>
+<ol type="1">
+<li><p>本周完成下游分析脚本调试。</p></li>
+<li><p>下周3之前完成一键脚本流程的调试，投入使用。</p></li>
+<li><p>5周内完成shinyapp开发，文章写作。</p></li>
+</ol>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    target: function(trigger) {
+      return trigger.previousElementSibling;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+</body></html>

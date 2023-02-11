@@ -1,0 +1,243 @@
+---
+title: "HPC_tidymass流程开发"
+author: "Shawn"
+date: "`r Sys.Date()`"
+format: html
+editor: visual
+---
+
+<center>
+
+<font color=salmon size=2pt> 🏡Zhang Lab, `r format(Sys.time(), '%B, %Y')` 🏡</font>
+
+<font color=green size=2pt> 🔬Multi-omics research center, HENU, Kaifeng, Henan 🔬</font>
+
+<font color=green size=2pt> 🔬State Key Laboratory of Crop Stress Adaption and Improvement, HENU, Kaifeng, Henan 🔬</font>
+
+</center>
+
+# 需要搭建的环境：
+
+首先联系管理员开通linux账户。然后并将账户添加到`bio`和`docker`用户组。`bio`账户是我们上传原始数据的账户，在数据格式转换的时候需要用到`docker`,在linux系统下，只有`root`账号可以使用`docker`，这时我们需要创建一个`docker`的用户组，将需要使用`tidymass`流程账号纳入`docker group`。\
+检查是否属于`docker` 用户组可以通过在终端输入`groups`进行组别查看：
+
+```{r eval=FALSE}
+shawn@bio-Super-Server:~$ groups
+root sudo docker bio teacher
+```
+
+其次需要安装`tidyvers`,`tidymass`以及我写的`MDAtoolkits`和`IMOtoolkits`包。同样通过下列代码查看依赖包是否安装好。
+
+```{r eval=FALSE}
+shawn@bio-Super-Server:~$ R ## 终端输入R回车
+
+R version 4.1.2 (2021-11-01) -- "Bird Hippie"
+Copyright (C) 2021 The R Foundation for Statistical Computing
+Platform: x86_64-pc-linux-gnu (64-bit)
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+##> 加载包，没有ERROR报错说明装好了。
+library(tidymass)
+library(tidyverse)
+library(MDAtoolkits)
+library(IMOtoolkits)
+```
+
+环境初始化: 首先通过下列命令创建脚本存放路径
+
+```{r eval=FALSE}
+cd ## 回到家目录
+##> 第一步 创建脚本存放路径
+mkdir -p /01.src/02.script/02.Tidymass
+##> 第二步 通过sftp将脚本文件上传到该路径
+##> 第三步 输入下面代码把脚本写进环境变量，添加alias
+echo 'alias peakpicking="Rscript ~/01.src/02.script/02.Tidymass/02.PeakPicking.R"' >> ~/.bash_alias
+echo "alias ms1convert='bash ~/01.src/02.script/02.Tidymass/01.msconvert.sh'">> ~/.bash_alias
+echo "alias ms2convert='bash ~/01.src/02.script/02.Tidymass/03.ms2convert.sh'" >> ~/.bash_alias
+echo "alias runTidymass='bash ~/01.src/02.script/02.Tidymass/runTidymass.sh'" >> ~/.bash_alias
+echo "alias datacleaning='Rscript ~/01.src/02.script/02.Tidymass/04.dataclean.R'" >> ~/.bash_alias
+echo "alias feature_anno='Rscript ~/01.src/02.script/02.Tidymass/05.feature_anno'" >> ~/.bash_alias
+echo "alias feature_downstream='Rscript ~/01.src/02.script/02.Tidymass/06.feature_downstream.R'" >> ~/.bash_alias
+echo "source ~/.bash_alias" >> ~/.bashrc
+source ~/.bashrc
+```
+
+至此分析环境搭建完毕。
+
+# 标准流程：
+
+| 步骤 | 描述                         | 脚本名称                 | 状态   | 改进方向                       |
+|---------------|---------------|---------------|---------------|---------------|
+| 1    | 下机数据转换为开源格式.mzXML | 01.msconvert.sh          | <font color=green>正常</font>   | 效率较低，优化并行             |
+| 2    | 下机数据转换为开源格式.mgf   | 03.ms2convert.sh         | <font color=green>正常</font>   | 效率较低，优化并行             |
+| 3    | feature提取                  | 02.PeakPicking.R         | <font color=green>正常</font>   | 无                             |
+| 4    | 数据清洗                     | 04.dataclean.R           | <font color=green>正常</font>   | 目前没有遇到bug，依据项目改进  |
+| 5    | 化合物注释，分类             | 05.feature_anno.R        | <font color=blue>待优化</font> | 提高MS1搜库效率，联系Dr. Shen  |
+| 6    | 下游分析                     | 06.feature_downstream.sh | <font color=blue>待优化</font> | 目前包括差异分析，富集分析     |
+| 7    | 报告生产                     | 07.report.R              | <font color=red>待启动</font> | 确定了下游分析对象后自动化生成 |
+| 8    | 一键流程                     | runTidymass.sh    |<font color=purple>开发中</font> |断点继续的判断
+| 9    | shinyapp开发  | runTidymass_shiny|<font color=purple>未启动</font> |
+
+
+
+## 标准流程图：
+
+下面所说的对象为`tidymass`构建的`S4`对象,被称为`massdataset`，其中包含了所有`feature`的质谱信息、表达水平、测试材料信息等。
+
+```{mermaid}
+flowchart TB
+  A[下机原始数据] -- 01.msconvert.sh --> B[开源格式.mzXML]
+  A[下机原始数据.raw] -- 03.ms2convert.sh --> C[开源格式.mgf]
+  B[开源格式.mzXML] -- 02.PeakPicking.R --> D[原始对象]
+  D[初始对象] -- 04.dataclean.R --> E[过滤后对象]
+  E[过滤后对象] -- 05.feature_anno.R --> F[注释后对象]
+  C[开源格式.mgf] -- 05.feature_anno.R --> F[注释后对象]
+  F[注释后对象] --06.feature_downstream.sh --> G[下游分析]
+  G[下游分析] --07.report.R --> H[生成报告]
+```
+
+```{r,eval=FALSE}
+-------------------- 
+massdataset version: 1.0.5 
+-------------------- 
+1.expression_data:[ 5105 x 244 data.frame]
+2.sample_info:[ 244 x 4 data.frame]
+3.variable_info:[ 5105 x 3 data.frame]
+4.sample_info_note:[ 4 x 2 data.frame]
+5.variable_info_note:[ 3 x 2 data.frame]
+6.ms2_data:[ 0 variables x 0 MS2 spectra]
+-------------------- 
+Processing information (extract_process_info())
+2 processings in total
+create_mass_dataset ---------- 
+      Package         Function.used                Time
+1 massdataset create_mass_dataset() 2022-12-06 08:50:25
+process_data ---------- 
+        Package Function.used                Time
+1 massprocesser  process_data 2022-12-06 08:32:23
+
+```
+
+## 使用方法
+
+### 数据准备
+
+- 在实验准备前，先对样品进行编号匹配，样品编号统一为`S_0001 --> S_1000`类型，注意这里需要用`0`补齐,因为linux系统下默认按文件名排序，如果不加`pad`顺序会是`S_1 S_10 S_11 .... S_2 S_20 S_21...`造成不必要的错误。`pad`数量根据样本量的大小补充，三位数补充两位，四位数补充3位。同样`QC`编号为`QC_01 ... QC_20`;
+
+- 文件结构,对于正负谱同时采的项目，将所有`.raw`文件放到一个文件夹下，用`bio`账号拷贝到`/home/data/public/02.rawdata/03.Metabolomics/kq-1`路径下。
+
+- 文件结构,对于正负谱分开采的项目，首先新建两个文件夹，一个为`NEG`,另一个位`POS`,分别将正负谱的结果放入对应的文件夹，然后拷贝。
+
+```{r eval=FALSE}
+shawn@bio-Super-Server:~/public/02.rawdata/03.Metabolomics$ tree -d kq-1
+kq-1
+|___ NEG
+|___ POS
+```
+
+必须严格按照命名规则和文件格式准备，`QC, S, NEG, POS`均为大写，`_`为下划线。
+
+
+### 脚本运行
+
+目前一键运行脚本已经开发到全部完成`1-4`步骤,并且具有断点续跑的功能。所以可以通过`runTidymass.sh`进行`1-4`步骤。
+
+```{r eval=FALSE}
+/home/data/shawn/01.src/02.script/02.Tidymass/runTidymass.sh: option requires an argument -- h
+Tidymass pipeline part1. Date transform and peak picking
+
+@Usage:
+-------------------------------
+runTidymass [-i input] [-t type] [-c column]
+-------------------------------
+@Author Shawn Wang (shawnwang2016@126.com)
+-------------------------------
+@Date Tus Feb 09, 2023
+-------------------------------
+@Version V.0.0.0.99 beta
+-------------------------------
+@Description
+-------------------------------
+[-i]:input,   The file path of .raw data
+[-t]:type,    The type of ion model, 1: NEG+POS in one file, 2: NEG and POS in differnet files
+[-c]:column,  rp or hilic
+-------------------------------
+```
+
+目前需要的参数：
+
+<font color=green>**-i | input**</font>：原始数据存放路径，一般为在`/home/data/public/02.rawdata/03.Metabolomics/xxx`。  
+
+<font color=green>**-t | type**</font>：采集模式，1：为正负谱同时采集，2：正负谱分开采集。
+
+<font color=green>**-c | column**</font>：柱子型号，rp 还是 hilic。
+
+### 输出结果文件结构
+
+```{r eval=FALSE}
+shawn@bio-Super-Server:~/02.project/13.kq1$ tree -d test/
+test/
+└── working_dir
+    ├── 01.data
+    │   └── rawdata
+    │       ├── NEG
+    │       │   ├── QC
+    │       │   └── Subject
+    │       └── POS
+    │           ├── QC
+    │           └── Subject
+    ├── 02.progress
+    │   ├── Data_cleaning
+    │   ├── annotation
+    │   ├── peak_picking
+    │   │   ├── NEG
+    │   │   │   └── Result
+    │   │   │       └── intermediate_data
+    │   │   └── POS
+    │   │       └── Result
+    │   │           └── intermediate_data
+    │   └── transform
+    │       ├── MS1
+    │       │   ├── NEG
+    │       │   │   ├── QC
+    │       │   │   └── Subject
+    │       │   └── POS
+    │       │       ├── QC
+    │       │       └── Subject
+    │       └── MS2
+    │           ├── NEG
+    │           │   ├── QC
+    │           │   └── Subject
+    │           └── POS
+    │               ├── QC
+    │               └── Subject
+    └── 03.result
+```
+
+# 目前的问题：
+
+Q1. 格式转换速度比较慢，目前搞清楚的问题来源是通过`docker`运行`msconvert`不同同时处理多个原始数据文件。  
+
+M1. 尝试并行，准备好原始数据后迭代，但可能开大量虚拟机对服务器负载要求较高。第二个方案是在windows下直接用`msconvert`转换，这种方法可以同时转换大量原始数据。
+
+Q2. 正负谱同时采集的数据用tidymass提峰结果又很大问题。目前原因不明，需要进一步检查结果
+
+# 计划
+
+1. 本周完成下游分析脚本调试。  
+
+2. 下周3之前完成一键脚本流程的调试，投入使用。  
+
+3. 5周内完成shinyapp开发，文章写作。
+

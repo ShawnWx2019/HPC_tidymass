@@ -9,6 +9,9 @@
 
 ## getopts
 set -e ## 报错打断，防止一直错下去
+
+start_time=$(date +%s)
+
 ## 帮助内容
 func(){
     echo -e "\033[32mTidymass pipeline part1. Date transform and peak picking\033[0m"
@@ -116,14 +119,26 @@ then
     mkdir -p ${out_put_dir}/MS1/POS/QC ${out_put_dir}/MS1/POS/Subject ${out_put_dir}/MS1/NEG/QC ${out_put_dir}/MS1/NEG/Subject
     mkdir -p ${out_put_dir}/MS2/POS/QC ${out_put_dir}/MS2/POS/Subject ${out_put_dir}/MS2/NEG/QC ${out_put_dir}/MS2/NEG/Subject
     echo -e "\033[32m====================================================\nParalle run.\n==================================================== \033[0m"
-    parallel --xapply -j 50 bash ~/01.src/02.script/02.Tidymass/01.msconvert.sh ::: ${pos_dir_raw}/QC ${pos_dir_raw}/Subject ${neg_dir_raw}/QC ${neg_dir_raw}/Subject \
-                                                                 ::: ${out_put_dir}/MS1/POS/QC ${out_put_dir}/MS1/POS/Subject ${out_put_dir}/MS1/NEG/QC ${out_put_dir}/MS1/NEG/Subject
+    commands=(
+        "bash ~/01.src/02.script/02.Tidymass/01.msconvert.sh ${pos_dir_raw}/QC  ${out_put_dir}/MS1/POS/QC"
+        "bash ~/01.src/02.script/02.Tidymass/01.msconvert.sh ${pos_dir_raw}/Subject  ${out_put_dir}/MS1/POS/Subject"
+        "bash ~/01.src/02.script/02.Tidymass/01.msconvert.sh ${neg_dir_raw}/QC  ${out_put_dir}/MS1/NEG/QC"
+        "bash ~/01.src/02.script/02.Tidymass/01.msconvert.sh ${neg_dir_raw}/Subject  ${out_put_dir}/MS1/NEG/Subject"
+        "bash ~/01.src/02.script/02.Tidymass/03.ms2convert.sh ${pos_dir_raw}/QC ${out_put_dir}/MS2/POS/QC"
+        "bash ~/01.src/02.script/02.Tidymass/03.ms2convert.sh ${pos_dir_raw}/Subject ${out_put_dir}/MS2/POS/Subject"
+        "bash ~/01.src/02.script/02.Tidymass/03.ms2convert.sh ${neg_dir_raw}/QC ${out_put_dir}/MS2/NEG/QC"
+        "bash ~/01.src/02.script/02.Tidymass/03.ms2convert.sh ${neg_dir_raw}/Subject ${out_put_dir}/MS2/NEG/Subject"
+    )
+    parallel --jobs 0 ::: "${commands[@]}"
+    echo -e "\033[32mTransform finish!\033[0m"
+    # parallel --xapply -j 0 bash ~/01.src/02.script/02.Tidymass/01.msconvert.sh ::: ${pos_dir_raw}/QC ${pos_dir_raw}/Subject ${neg_dir_raw}/QC ${neg_dir_raw}/Subject \
+    #                                                              ::: ${out_put_dir}/MS1/POS/QC ${out_put_dir}/MS1/POS/Subject ${out_put_dir}/MS1/NEG/QC ${out_put_dir}/MS1/NEG/Subject
     
-    echo -e "\033[32mMS1 transform finish!\033[0m"
+    # echo -e "\033[32mMS1 transform finish!\033[0m"
 
-    parallel --xapply -j 50 bash ~/01.src/02.script/02.Tidymass/03.ms2convert.sh ::: ${pos_dir_raw}/QC ${pos_dir_raw}/Subject ${neg_dir_raw}/QC ${neg_dir_raw}/Subject \
-                                                                 ::: ${out_put_dir}/MS2/POS/QC ${out_put_dir}/MS2/POS/Subject ${out_put_dir}/MS2/NEG/QC ${out_put_dir}/MS2/NEG/Subject
-    echo -e "\033[32mMS2 transform finish!\033[0m"
+    # parallel --xapply -j 0 bash ~/01.src/02.script/02.Tidymass/03.ms2convert.sh ::: ${pos_dir_raw}/QC ${pos_dir_raw}/Subject ${neg_dir_raw}/QC ${neg_dir_raw}/Subject \
+    #                                                              ::: ${out_put_dir}/MS2/POS/QC ${out_put_dir}/MS2/POS/Subject ${out_put_dir}/MS2/NEG/QC ${out_put_dir}/MS2/NEG/Subject
+    # echo -e "\033[32mMS2 transform finish!\033[0m"
 else
     echo -e "\033[42;37malreay finished! skip this step.\033[0m"
 fi  
@@ -170,3 +185,13 @@ else
     ln -s ../peak_picking/object* ./
    # /usr/local/bin/Rscript ~/01.src/02.script/02.Tidymass/04.Datacleaning.R \
 fi
+
+end_time=$(date +%s)
+run_time=$((end_time - start_time))
+
+
+hours=$((run_time / 3600))
+minutes=$(((run_time / 60) % 60))
+seconds=$((run_time % 60))
+
+printf "\033[34mThe script took %d hours, %d minutes, and %d seconds to run.\033[0m\n" $hours $minutes $seconds
