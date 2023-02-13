@@ -181,11 +181,14 @@ then
     echo -e "\033[34mData cleaning have already fininshed! start next step.\033[0m"
 else
     echo -e "\033[34mStart data cleaing progress\033[0m"
-    mkdir -p Data_cleaning && cd Data_cleaning && ln -s ../../01.data/injection_order* ./
+    mkdir -p Data_cleaning && cd Data_cleaning 
+    ln -s ../../01.data/rawdata/injection_order_* ./
     ln -s ../peak_picking/object* ./
-   # /usr/local/bin/Rscript ~/01.src/02.script/02.Tidymass/04.Datacleaning.R \
+    /usr/local/bin/Rscript ~/01.src/02.script/02.Tidymass/04.DataCleaning.R 
 fi
 
+
+##> check running time
 end_time=$(date +%s)
 run_time=$((end_time - start_time))
 
