@@ -59,6 +59,8 @@ echo -e "\033[32m====================================================\nStep1 Pro
 
 mkdir -p working_dir && cd working_dir && mkdir -p 01.data 02.progress 03.result
 
+main_dir=$PWD
+
 filecount=`ls 01.data | wc -w`
 
 if [ $filecount == "0" ]
@@ -110,7 +112,7 @@ fi
 
 echo -e "\033[32m====================================================\nStep2 Convert .raw file to .mzXML and .mgf\n==================================================== \033[0m"
 
-cd ../../02.progress && mkdir -p transform peak_picking annotation && cd transform
+cd ../../02.progress && mkdir -p transform peak_picking && cd transform
 
 filecount2=`ls ./ | wc -w`
 out_put_dir=$(realpath ./)
@@ -153,7 +155,7 @@ cd ../peak_picking
 ## Step3 peak picking...
 
 filecount3=`ls ./ | wc -w`
-echo $PWD
+
 if [ $filecount3 == "0" ]
 then
     echo -e "\033[32m====================================================\nPeak picking run.\n==================================================== \033[0m"
@@ -164,17 +166,18 @@ then
                 -g "QC"
     mkdir -p NEG POS && mv ${out_put_dir}/MS1/NEG/Result NEG/Result && mv  ${out_put_dir}/MS1/POS/Result POS/Result
     cp NEG/Result/object object.neg && cp POS/Result/object object.pos 
+    
 else
     echo -e "\033[42;37malreay finished! skip this step.\033[0m"
 fi  
 
-echo -e "\033[32m====================================================\nPeak picking done!.\n==================================================== \033[0m"
+echo -e "\033[32m====================================================\nPeak picking done!\n==================================================== \033[0m"
 
 echo -e "\033[32m====================================================\nStep4 Data cleaning\n==================================================== \033[0m"
 
 ## Step4 Data cleaning
 
-cd ../
+cd $main_dir/02.progress
 
 if [ -d Data_cleaning ]
 then
@@ -186,6 +189,24 @@ else
     ln -s ../peak_picking/object* ./
     /usr/local/bin/Rscript ~/01.src/02.script/02.Tidymass/04.DataCleaning.R 
 fi
+
+echo -e "\033[32m====================================================\nData cleaning done!\n==================================================== \033[0m"
+echo -e "\033[32m====================================================\nStep5. Feature annotation!\n==================================================== \033[0m"
+
+cd $main_dir/02.progress
+
+if [ -d Annotation ]
+then
+    echo -e "\033[34mFeature annotation have already fininshed! start next step.\033[0m"
+else
+    echo -e "\033[34mStart feature annotation progress\033[0m"
+    mkdir -p Annotation && cd Annotation 
+    ln -s ../transform/MS2/NEG/ ./
+    ln -s ../transform/MS2/POS/ ./
+    ln -s ../Data_cleaning/*.rds ./
+    /usr/local/bin/Rscript ~/01.src/02.script/02.Tidymass/05.Metabolomics_annotation.R $column
+fi
+
 
 
 ##> check running time
