@@ -14,7 +14,7 @@ start_time=$(date +%s)
 
 ## 帮助内容
 func(){
-    echo -e "\033[32mTidymass pipeline part1. Date transform and peak picking\033[0m"
+    echo -e "\033[32mTidymass pipeline part1. Date transform ,peak picking and annotation\033[0m"
     echo -e "\033[32mUsage:\033[0m"
     echo -e "\033[32m-------------------------------\033[0m"
     echo -e "\033[35mrunTidymass \033[32m[-i input] \033[33m[-t type] \033[31m[-c column]\033[0m"
@@ -89,11 +89,13 @@ else
         tree -d
     elif [ $type == "2" ]
     then
-        cd NEG && ls -ltr $input> injection_order_neg.txt && mv injection_order_neg.txt ../
-        mkdir -p QC Subject
+        ## 进行负谱数据整合 
+        cd NEG && ls -ltr $input/NEG > injection_order_neg.txt && mv injection_order_neg.txt ../
+        mkdir -p QC Subject 
         mv QC*.raw QC && mv *.raw Subject 
         neg_dir_raw=$(realpath ./)
-        cd ../POS && ls -ltr $input > injection_order_pos.txt && mv injection_order_pos.txt ../
+        ## 进行正谱数据整合 
+        cd ../POS && ls -ltr $input/POS > injection_order_pos.txt && mv injection_order_pos.txt ../
         mkdir -p QC Subject
         mv QC*.raw QC && mv *.raw Subject
         pos_dir_raw=$(realpath ./) && cd ../
@@ -106,7 +108,7 @@ else
         exit
     fi
 fi
-    
+
 
 ## step2. convert .raw to mzXML and .mgf format
 
@@ -133,14 +135,7 @@ then
     )
     parallel --jobs 0 ::: "${commands[@]}"
     echo -e "\033[32mTransform finish!\033[0m"
-    # parallel --xapply -j 0 bash ~/01.src/02.script/02.Tidymass/01.msconvert.sh ::: ${pos_dir_raw}/QC ${pos_dir_raw}/Subject ${neg_dir_raw}/QC ${neg_dir_raw}/Subject \
-    #                                                              ::: ${out_put_dir}/MS1/POS/QC ${out_put_dir}/MS1/POS/Subject ${out_put_dir}/MS1/NEG/QC ${out_put_dir}/MS1/NEG/Subject
     
-    # echo -e "\033[32mMS1 transform finish!\033[0m"
-
-    # parallel --xapply -j 0 bash ~/01.src/02.script/02.Tidymass/03.ms2convert.sh ::: ${pos_dir_raw}/QC ${pos_dir_raw}/Subject ${neg_dir_raw}/QC ${neg_dir_raw}/Subject \
-    #                                                              ::: ${out_put_dir}/MS2/POS/QC ${out_put_dir}/MS2/POS/Subject ${out_put_dir}/MS2/NEG/QC ${out_put_dir}/MS2/NEG/Subject
-    # echo -e "\033[32mMS2 transform finish!\033[0m"
 else
     echo -e "\033[42;37malreay finished! skip this step.\033[0m"
 fi  
