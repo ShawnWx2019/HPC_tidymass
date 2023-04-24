@@ -202,6 +202,20 @@ else
     /usr/local/bin/Rscript ~/01.src/02.script/02.Tidymass/05.Metabolomics_annotation.R $column
 fi
 
+cd $main_dir/02.progress/Annotation
+
+##> annotation filter
+
+if [ -d Clean_annotation/Only_MS2 ] 
+then 
+    echo -e "033[34mAnnotation filter have already fininshed! start next step.\033[0m"
+else
+    echo -e "\033[34mStart feature annotation filtering progress\033[0m"
+    /usr/local/bin/Rscript ~/01.src/02.script/02.Tidymass/06.Annotation_filtering.R
+fi
+
+echo -e "\033[32m====================================================\nFeature annotation done!\n==================================================== \033[0m"
+echo -e "\033[32m====================================================\nStep6. Down Stream analysis!\n==================================================== \033[0m"
 
 
 ##> check running time

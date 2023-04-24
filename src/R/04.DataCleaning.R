@@ -151,29 +151,6 @@ ggsave(filename = "01.raw/NEG/missing_value_distribution.pdf",plot = plt_mv_raw.
 
 # 1.2 Outlier detect and remove outliers ----------------------------------
 
-outlier_samples.neg <-
-  object.neg %>% 
-  `+`(1) %>% 
-  log(2) %>% 
-  scale() %>% 
-  detect_outlier(na_percentage_cutoff = 0.5)
-
-outlier_table.neg <-
-  extract_outlier_table(outlier_samples.neg)
-
-out_name.neg <-
-  outlier_table.neg %>%
-  filter(according_to_na == TRUE) %>% 
-  rownames()
-
-##> remove outlier based on 
-if(length(out_name.neg) != 0) {
-  object.neg <- 
-    object.neg %>% 
-    activate_mass_dataset('expression_data') %>% 
-    select(-all_of(out_name.neg))
-}
-
 qc_id = object.neg %>%
   activate_mass_dataset(what = "sample_info") %>%
   filter(class == "QC") %>%
@@ -202,6 +179,42 @@ plt_mv_remove_noise.neg<-
 
 ggsave(filename = "02.remove_noise//NEG/plt_mv_remove_noise.neg.png",plot = plt_mv_remove_noise.neg,width = 10,height = 5)
 ggsave(filename = "02.remove_noise//NEG/plt_mv_remove_noise.neg.pdf",plot = plt_mv_remove_noise.neg,width = 10,height = 5)
+
+
+outlier_samples.neg <-
+  object.neg.mv %>% 
+  `+`(1) %>% 
+  log(2) %>% 
+  scale() %>% 
+  detect_outlier(na_percentage_cutoff = 0.8)
+
+outlier_table.neg <-
+  extract_outlier_table(outlier_samples.neg)
+
+out_name.neg <-
+  outlier_table.neg %>%
+  filter(according_to_na == TRUE) %>% 
+  rownames()
+
+##> remove outlier based on 
+if(length(out_name.neg) != 0) {
+  object.neg.mv <- 
+    object.neg.mv %>% 
+    activate_mass_dataset('expression_data') %>% 
+    select(-all_of(out_name.neg))
+}
+
+plt_mv_remove_outlier.neg<-
+  show_sample_missing_values(object = object.neg.mv, percentage = TRUE,color_by = 'group',order_by = 'injection.order')+theme1+
+  geom_hline(yintercept = 80,color = "red",linetype="dashed")+
+  ylim(c(0,100))+
+  theme(axis.text.x = element_text(size = 8,angle = 90)) +
+  scale_size_continuous(range = c(0.1, 2)) +
+  ggsci::scale_color_aaas()+
+  theme(axis.text.x = element_text(size = 3))
+
+ggsave(filename = "02.remove_noise//NEG/plt_mv_remove_outlier.neg.png",plot = plt_mv_remove_outlier.neg,width = 10,height = 5)
+ggsave(filename = "02.remove_noise//NEG/plt_mv_remove_outlier.neg.pdf",plot = plt_mv_remove_outlier.neg,width = 10,height = 5)
 
 
 # impute mv ---------------------------------------------------------------
@@ -327,28 +340,6 @@ ggsave(filename = "01.raw/POS/missing_value_distribution.pdf",plot = plt_mv_raw.
 
 # 1.2 Outlier detect and remove outliers ----------------------------------
 
-outlier_samples.pos <-
-  object.pos %>% 
-  `+`(1) %>% 
-  log(2) %>% 
-  scale() %>% 
-  detect_outlier(na_percentage_cutoff = 0.5)
-
-outlier_table.pos <-
-  extract_outlier_table(outlier_samples.pos)
-
-out_name.pos <-
-  outlier_table.pos %>%
-  filter(according_to_na == TRUE) %>% 
-  rownames()
-
-##> remove outlier based on 
-if(length(out_name.pos) != 0) {
-  object.pos <- 
-    object.pos %>% 
-    activate_mass_dataset('expression_data') %>% 
-    select(-all_of(out_name.pos))
-}
 
 qc_id = object.pos %>%
   activate_mass_dataset(what = "sample_info") %>%
@@ -376,8 +367,44 @@ plt_mv_remove_noise.pos<-
   ggsci::scale_color_aaas()+
   theme(axis.text.x = element_text(size = 3))
 
-ggsave(filename = "02.remove_noise//POS/plt_mv_remove_noise.pos.png",plot = plt_mv_remove_noise.pos,width = 10,height = 5)
-ggsave(filename = "02.remove_noise//POS/plt_mv_remove_noise.pos.pdf",plot = plt_mv_remove_noise.pos,width = 10,height = 5)
+ggsave(filename = "02.remove_noise/POS/plt_mv_remove_noise.pos.png",plot = plt_mv_remove_noise.pos,width = 10,height = 5)
+ggsave(filename = "02.remove_noise/POS/plt_mv_remove_noise.pos.pdf",plot = plt_mv_remove_noise.pos,width = 10,height = 5)
+
+##> remove outlier
+outlier_samples.pos <-
+  object.pos.mv %>% 
+  `+`(1) %>% 
+  log(2) %>% 
+  scale() %>% 
+  detect_outlier(na_percentage_cutoff = 0.5)
+
+outlier_table.pos <-
+  extract_outlier_table(outlier_samples.pos)
+
+out_name.pos <-
+  outlier_table.pos %>%
+  filter(according_to_na == TRUE) %>% 
+  rownames()
+
+##> remove outlier based on 
+if(length(out_name.pos) != 0) {
+  object.pos.mv <- 
+    object.pos.mv %>% 
+    activate_mass_dataset('expression_data') %>% 
+    select(-all_of(out_name.pos))
+}
+
+plt_mv_remove_outlier.pos<-
+  show_sample_missing_values(object = object.pos.mv, percentage = TRUE,color_by = 'group',order_by = 'injection.order')+theme1+
+  geom_hline(yintercept = 80,color = "red",linetype="dashed")+
+  ylim(c(0,100))+
+  theme(axis.text.x = element_text(size = 8,angle = 90)) +
+  scale_size_continuous(range = c(0.1, 2)) +
+  ggsci::scale_color_aaas()+
+  theme(axis.text.x = element_text(size = 3))
+
+ggsave(filename = "02.remove_noise/POS/plt_mv_remove_outlier.pos.png",plot = plt_mv_remove_outlier.pos,width = 10,height = 5)
+ggsave(filename = "02.remove_noise/POS/plt_mv_remove_outlier.pos.pdf",plot = plt_mv_remove_outlier.pos,width = 10,height = 5)
 
 
 # impute mv ---------------------------------------------------------------
