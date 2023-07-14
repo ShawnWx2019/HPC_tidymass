@@ -11,7 +11,7 @@ library(tidyverse)
 message(crayon::green("load annotated objects. please wait..."))
 load("object_neg_anno.rds")
 load("object_pos_anno.rds")
-load("/home/data/shawn/public/01.database/01.Database/02.meta_db/labID2INCHIKEY.rda")
+load("~/.HPC_tidymass/MS_db/labID2INCHIKEY.rda")
 message(crayon::green("Running original filtering!"))
 # original annotation output ----------------------------------------------
 dir.create("Original_annotation",showWarnings = F,recursive = T)

@@ -46,16 +46,15 @@ save(object_neg.ms2,file = "object_neg.ms2.rds")
 
 
 
-load("/home/data/public/01.database/01.Database/02.meta_db/fiehn_hilic_database0.0.3.rda")
-load("/home/data/public/01.database/01.Database/02.meta_db/hmdb_database0.0.3.rda")
-load("/home/data/public/01.database/01.Database/02.meta_db/kegg_ms1_database0.0.3.rda")
-load("/home/data/public/01.database/01.Database/02.meta_db/massbank_database0.0.3.rda")
-load("/home/data/public/01.database/01.Database/02.meta_db/mona_database0.0.3.rda")
-load("/home/data/public/01.database/01.Database/02.meta_db/snyder_database_hilic0.0.3.rda")
-load("/home/data/public/01.database/01.Database/02.meta_db/KNApSAcK_ms1_database.rda")
-load("/home/data/public/01.database/01.Database/02.meta_db/plantcyc_ms1_database0.0.2.rda")
-load("/home/data/public/01.database/01.Database/02.meta_db/RIKEN_PlaSMA_database0.0.1.rda")
-load("/home/data/public/01.database/01.Database/02.meta_db/Natural_products_database_v1.rds")
+load("~/.HPC_tidymass/MS_db/fiehn_hilic_database0.0.3.rda")
+load("~/.HPC_tidymass/MS_db/hmdb_database0.0.3.rda")
+load("~/.HPC_tidymass/MS_db/kegg_ms1_database0.0.3.rda")
+load("~/.HPC_tidymass/MS_db/massbank_database0.0.3.rda")
+load("~/.HPC_tidymass/MS_db/mona_database0.0.3.rda")
+load("~/.HPC_tidymass/MS_db/snyder_database_hilic0.0.3.rda")
+load("~/.HPC_tidymass/MS_db/KNApSAcK_ms1_database.rda")
+load("~/.HPC_tidymass/MS_db/plantcyc_ms1_database0.0.2.rda")
+load("~/.HPC_tidymass/MS_db/RIKEN_PlaSMA_database0.0.1.rda")
 
 
 # for ms1
@@ -160,16 +159,6 @@ object_pos_anno <-
     candidate.num = 2
   )
 
-object_pos_anno <-
-  annotate_metabolites_mass_dataset(
-    object = object_pos_anno,
-    polarity = 'positive',
-    ms1.match.ppm = 15,
-    column = column,
-    threads = 100,
-    database = Natural_products_database_v1,
-    candidate.num = 2
-  )
 save(object_pos_anno,file = "object_pos_anno.rds")
 
 
@@ -275,16 +264,7 @@ object_neg_anno <-
     candidate.num = 2
   )
 
-object_neg_anno <-
-  annotate_metabolites_mass_dataset(
-    object = object_neg_anno,
-    polarity = 'negative',
-    ms1.match.ppm = 15,
-    column = column,
-    threads = 100,
-    database = Natural_products_database_v1,
-    candidate.num = 2
-  )
+
 
 save(object_neg_anno,file = "object_neg_anno.rds")
 

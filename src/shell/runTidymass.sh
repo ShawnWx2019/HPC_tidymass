@@ -10,6 +10,9 @@
 ## getopts
 set -e ## 报错打断，防止一直错下去
 
+shopt -s expand_aliases
+source ~/.bash_alias
+
 start_time=$(date +%s)
 
 ## 帮助内容
@@ -124,14 +127,14 @@ then
     mkdir -p ${out_put_dir}/MS2/POS/QC ${out_put_dir}/MS2/POS/Subject ${out_put_dir}/MS2/NEG/QC ${out_put_dir}/MS2/NEG/Subject
     echo -e "\033[32m====================================================\nParalle run.\n==================================================== \033[0m"
     commands=(
-        "bash ~/01.src/02.script/02.Tidymass/01.msconvert.sh ${pos_dir_raw}/QC  ${out_put_dir}/MS1/POS/QC"
-        "bash ~/01.src/02.script/02.Tidymass/01.msconvert.sh ${pos_dir_raw}/Subject  ${out_put_dir}/MS1/POS/Subject"
-        "bash ~/01.src/02.script/02.Tidymass/01.msconvert.sh ${neg_dir_raw}/QC  ${out_put_dir}/MS1/NEG/QC"
-        "bash ~/01.src/02.script/02.Tidymass/01.msconvert.sh ${neg_dir_raw}/Subject  ${out_put_dir}/MS1/NEG/Subject"
-        "bash ~/01.src/02.script/02.Tidymass/03.ms2convert.sh ${pos_dir_raw}/QC ${out_put_dir}/MS2/POS/QC"
-        "bash ~/01.src/02.script/02.Tidymass/03.ms2convert.sh ${pos_dir_raw}/Subject ${out_put_dir}/MS2/POS/Subject"
-        "bash ~/01.src/02.script/02.Tidymass/03.ms2convert.sh ${neg_dir_raw}/QC ${out_put_dir}/MS2/NEG/QC"
-        "bash ~/01.src/02.script/02.Tidymass/03.ms2convert.sh ${neg_dir_raw}/Subject ${out_put_dir}/MS2/NEG/Subject"
+        "hpc-msConvert ${pos_dir_raw}/QC  ${out_put_dir}/MS1/POS/QC"
+        "hpc-msConvert ${pos_dir_raw}/Subject  ${out_put_dir}/MS1/POS/Subject"
+        "hpc-msConvert ${neg_dir_raw}/QC  ${out_put_dir}/MS1/NEG/QC"
+        "hpc-msConvert ${neg_dir_raw}/Subject  ${out_put_dir}/MS1/NEG/Subject"
+        "hpc-msConvert${pos_dir_raw}/QC ${out_put_dir}/MS2/POS/QC"
+        "hpc-msConvert ${pos_dir_raw}/Subject ${out_put_dir}/MS2/POS/Subject"
+        "hpc-msConvert ${neg_dir_raw}/QC ${out_put_dir}/MS2/NEG/QC"
+        "hpc-msConvert ${neg_dir_raw}/Subject ${out_put_dir}/MS2/NEG/Subject"
     )
     parallel --jobs 0 ::: "${commands[@]}"
     echo -e "\033[32mTransform finish!\033[0m"
@@ -154,7 +157,7 @@ filecount3=`ls ./ | wc -w`
 if [ $filecount3 == "0" ]
 then
     echo -e "\033[32m====================================================\nPeak picking run.\n==================================================== \033[0m"
-    /usr/local/bin/Rscript ~/01.src/02.script/02.Tidymass/02.PeakPicking.R \
+    hpc-peakPicking \
                 -p ../transform/MS1/POS/ \
                 -n ../transform/MS1/NEG/ \
                 -t 100 \
@@ -182,7 +185,7 @@ else
     mkdir -p Data_cleaning && cd Data_cleaning 
     ln -s ../../01.data/rawdata/injection_order_* ./
     ln -s ../peak_picking/object* ./
-    /usr/local/bin/Rscript ~/01.src/02.script/02.Tidymass/04.DataCleaning.R 
+    hpc-dataCleaning
 fi
 
 echo -e "\033[32m====================================================\nData cleaning done!\n==================================================== \033[0m"
@@ -199,7 +202,7 @@ else
     ln -s ../transform/MS2/NEG/ ./
     ln -s ../transform/MS2/POS/ ./
     ln -s ../Data_cleaning/*.rds ./
-    /usr/local/bin/Rscript ~/01.src/02.script/02.Tidymass/05.Metabolomics_annotation.R $column
+    hpc-annotation $column
 fi
 
 cd $main_dir/02.progress/Annotation
@@ -211,7 +214,7 @@ then
     echo -e "033[34mAnnotation filter have already fininshed! start next step.\033[0m"
 else
     echo -e "\033[34mStart feature annotation filtering progress\033[0m"
-    /usr/local/bin/Rscript ~/01.src/02.script/02.Tidymass/06.Annotation_filtering.R
+    hpc-annoFiltering
 fi
 
 echo -e "\033[32m====================================================\nFeature annotation done!\n==================================================== \033[0m"

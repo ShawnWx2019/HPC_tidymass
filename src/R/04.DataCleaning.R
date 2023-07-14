@@ -6,12 +6,13 @@
 #       Location: HENU
 ##################################
 # import packages ---------------------------------------------------------
-library(tidymass)
-library(tidyverse)
-library(MDAtoolkits)
-library(IMOtoolkits)
-library(patchwork)
 
+suppressMessages(if (!require('devtools')) BiocManager::install('devtools'))
+suppressMessages(if (!require('tidyverse')) BiocManager::install('tidyverse'))
+suppressMessages(if (!require('patchwork')) BiocManager::install('patchwork'))
+suppressMessages(if (!require('MDAtoolkits')) install_github(repo = "ShawnWx2019/MDAtoolkits",ref = 'master'))
+suppressMessages(if (!require('MDAtoolkits')) install_github(repo = "ShawnWx2019/IMOtoolkits"))
+library(tidymass)
 # for negative model ------------------------------------------------------
 
 ##> 
