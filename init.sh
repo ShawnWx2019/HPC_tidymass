@@ -15,9 +15,9 @@ echo -e "\033[32m-------------------------------\033[0m"
 
 ##> conf file
 
-mkdir ~/.HPC_tidyass && cd ~/.HPC_tidymass
+mkdir ~/.HPC_tidymass && cd ~/.HPC_tidymass
 
-cp -r src/ ~/.HPC_tidymass/src
+cp -r src ~/.HPC_tidymass/src
 
 cp -r MS_db ~/.HPC_tidymass/MS_db
 
@@ -25,6 +25,7 @@ cp -r MS_db ~/.HPC_tidymass/MS_db
 
 touch ~/.bash_alias && echo "source ~/.bash_alias" >> ~/.bashrc
 
+echo 'alias hpc-runTidymass="bash ~/.HPC_tidymass/src/shell/runTidymass.sh"' >> ~/.bash_alias
 echo 'alias hpc-msConvert="bash ~/.HPC_tidymass/src/shell/01.msconvert.sh"' >> ~/.bash_alias
 echo 'alias hpc-msConvert2="bash ~/.HPC_tidymass/src/shell/03.ms2convert.sh"' >> ~/.bash_alias
 echo 'alias hpc-peakPicking="~/.HPC_tidymass/src/R/02.PeakPicking.R"' >> ~/.bash_alias

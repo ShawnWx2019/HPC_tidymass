@@ -38,7 +38,7 @@ func(){
 ## 是否备份原始文件，如果不写-b默认不备份
 
 ## 设置各个参数
-while getopts 'h:i:t:c:' OPT;
+while getopts 'hi:t:c:' OPT;
 do
     case $OPT in
         i) input=`echo "$OPTARG"`;;
@@ -127,14 +127,14 @@ then
     mkdir -p ${out_put_dir}/MS2/POS/QC ${out_put_dir}/MS2/POS/Subject ${out_put_dir}/MS2/NEG/QC ${out_put_dir}/MS2/NEG/Subject
     echo -e "\033[32m====================================================\nParalle run.\n==================================================== \033[0m"
     commands=(
-        "hpc-msConvert ${pos_dir_raw}/QC  ${out_put_dir}/MS1/POS/QC"
-        "hpc-msConvert ${pos_dir_raw}/Subject  ${out_put_dir}/MS1/POS/Subject"
-        "hpc-msConvert ${neg_dir_raw}/QC  ${out_put_dir}/MS1/NEG/QC"
-        "hpc-msConvert ${neg_dir_raw}/Subject  ${out_put_dir}/MS1/NEG/Subject"
-        "hpc-msConvert${pos_dir_raw}/QC ${out_put_dir}/MS2/POS/QC"
-        "hpc-msConvert ${pos_dir_raw}/Subject ${out_put_dir}/MS2/POS/Subject"
-        "hpc-msConvert ${neg_dir_raw}/QC ${out_put_dir}/MS2/NEG/QC"
-        "hpc-msConvert ${neg_dir_raw}/Subject ${out_put_dir}/MS2/NEG/Subject"
+        "bash ~/.HPC_tidymass/src/shell/01.msconvert.sh ${pos_dir_raw}/QC  ${out_put_dir}/MS1/POS/QC"
+        "bash ~/.HPC_tidymass/src/shell/01.msconvert.sh ${pos_dir_raw}/Subject  ${out_put_dir}/MS1/POS/Subject"
+        "bash ~/.HPC_tidymass/src/shell/01.msconvert.sh ${neg_dir_raw}/QC  ${out_put_dir}/MS1/NEG/QC"
+        "bash ~/.HPC_tidymass/src/shell/01.msconvert.sh ${neg_dir_raw}/Subject  ${out_put_dir}/MS1/NEG/Subject"
+        "bash ~/.HPC_tidymass/src/shell/03.ms2convert.sh ${pos_dir_raw}/QC ${out_put_dir}/MS2/POS/QC"
+        "bash ~/.HPC_tidymass/src/shell/03.ms2convert.sh ${pos_dir_raw}/Subject ${out_put_dir}/MS2/POS/Subject"
+        "bash ~/.HPC_tidymass/src/shell/03.ms2convert.sh ${neg_dir_raw}/QC ${out_put_dir}/MS2/NEG/QC"
+        "bash ~/.HPC_tidymass/src/shell/03.ms2convert.sh ${neg_dir_raw}/Subject ${out_put_dir}/MS2/NEG/Subject"
     )
     parallel --jobs 0 ::: "${commands[@]}"
     echo -e "\033[32mTransform finish!\033[0m"
