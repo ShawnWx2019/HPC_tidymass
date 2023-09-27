@@ -20,7 +20,7 @@ func(){
     echo -e "\033[32mTidymass pipeline part1. Date transform ,peak picking and annotation\033[0m"
     echo -e "\033[32mUsage:\033[0m"
     echo -e "\033[32m-------------------------------\033[0m"
-    echo -e "\033[35mrunTidymass \033[32m[-i input] \033[33m[-t type] \033[31m[-c column]\033[0m"
+    echo -e "\033[35mrunTidymass \033[32m[-i input] \033[33m[-t type] \033[33m[-s sample_info] \033[33m[-g heterogeneous] \033[31m[-c column]\033[0m"
     echo -e "\033[32m-------------------------------\033[0m"
     echo -e "\033[32mAuthor\033[0m Shawn Wang (shawnwang2016@126.com)"
     echo -e "\033[32m-------------------------------\n\033[0m"
@@ -31,34 +31,55 @@ func(){
     echo -e "\033[32mDescription\033[0m"
     echo -e "\033[32m-------------------------------\n\033[0m"
     echo -e "\033[32m[-i]:input\033[0m,   The file path of .raw data\033[0m"
-    echo -e "\033[33m[-t]:type\033[0m,  The type of ion model, 1: NEG+POS in one file, 2: NEG and POS in differnet files\033[0m"
-    echo -e "\033[31m[-c]:column\033[0m,  rp or hilic"
+    echo -e "\033[33m[-t]:type\033[0m,  The type of ion model, 1: NEG+POS in one file, 2: NEG and POS in differnet files, default: 1\033[0m"
+    echo -e "\033[33m[-g]:heterogeneous\033[0m,  samples from different tissues(or species) or not, yes | no, default : no\033[0m"
+    echo -e "\033[33m[-s]:sample_info\033[0m,  sample information. see tidymass manual\033[0m"
+    echo -e "\033[31m[-c]:column\033[0m,  rp or hilic, default: rp"
     exit -1
 }
 ## 是否备份原始文件，如果不写-b默认不备份
 
 ## 设置各个参数
-while getopts 'hi:t:c:' OPT;
+while getopts 'hi:t::c:g::s::' OPT;
 do
     case $OPT in
         i) input=`echo "$OPTARG"`;;
         t) type=`echo "$OPTARG"`;;
         c) column=`echo "$OPTARG"`;;
-        h) func;;
-        ?) func;;
+        g) heterogeneous=`echo "$OPTARG"`;;
+        s) sample_info=`echo "$OPTARG"`;;
+        h) func
+           exit 1
+           ;;
+        ?) func
+           exit 1
+           ;;
     esac
 done
+
+## 设置默认参数
+
+if [ -z "$input" ]; then echo -e "\033[31m\nERROR:\033[0m need [-i]:input parameter, file path of rawdata\033[0m"; exit 1; fi
+if [ -z "$type" ]; then type='1';fi
+if [ -z "$column" ]; then column='rp'; fi
+if [ -z "$heterogeneous" ]; then heterogeneous="no"; fi
+if [ -z "$sample_info" ]; then echo -e "\033[31m\nERROR:\033[0m need [-s]:sample_info,  sample information file.\033[0m"; exit 1; fi
+
 ## 提示你的参数设置
 echo -e "\033[32m====================================================\033[1m"
 echo -e "\033[34mYour setting:\033[0m"
 echo -e "\033[32mThe input file located in:\033[0m ${input}" 
 echo -e "\033[32mThe input ion model is :\033[0m  ${type}"
 echo -e "\033[32mThe column type is:\033[0m  ${column}"
+echo -e "\033[32mSample from different tissue or species:\033[0m  ${heterogeneous}"
+echo -e "\033[32mSample information file:\033[0m  ${sample_info}"
 echo -e "\033[32m====================================================\033[0m"
 
 ## step1. Project init
 
 echo -e "\033[32m====================================================\nStep1 Project init....\n==================================================== \033[0m"
+
+sample_file_path=$(readlink -f ${sample_info})
 
 mkdir -p working_dir && cd working_dir && mkdir -p 01.data 02.progress 03.result
 
@@ -185,7 +206,7 @@ else
     mkdir -p Data_cleaning && cd Data_cleaning 
     ln -s ../../01.data/rawdata/injection_order_* ./
     ln -s ../peak_picking/object* ./
-    hpc-dataCleaning
+    hpc-dataCleaning ${heterogeneous} ${sample_file_path}
 fi
 
 echo -e "\033[32m====================================================\nData cleaning done!\n==================================================== \033[0m"

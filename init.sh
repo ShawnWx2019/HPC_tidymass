@@ -28,10 +28,10 @@ touch ~/.bash_alias && echo "source ~/.bash_alias" >> ~/.bashrc
 echo 'alias hpc-runTidymass="bash ~/.HPC_tidymass/src/shell/runTidymass.sh"' >> ~/.bash_alias
 echo 'alias hpc-msConvert="bash ~/.HPC_tidymass/src/shell/01.msconvert.sh"' >> ~/.bash_alias
 echo 'alias hpc-msConvert2="bash ~/.HPC_tidymass/src/shell/03.ms2convert.sh"' >> ~/.bash_alias
-echo 'alias hpc-peakPicking="~/.HPC_tidymass/src/R/02.PeakPicking.R"' >> ~/.bash_alias
-echo 'alias hpc-dataCleaning="~/.HPC_tidymass/src/R/04.DataCleaning.R"' >> ~/.bash_alias
-echo 'alias hpc-annotation="~/.HPC_tidymass/src/R/05.Metabolomics_annotation.R"' >> ~/.bash_alias
-echo 'alias hpc-annoFiltering="~/.HPC_tidymass/src/R/06.Annotation_filtering.R"' >> ~/.bash_alias
+echo 'alias hpc-peakPicking="Rscript ~/.HPC_tidymass/src/R/02.PeakPicking.R"' >> ~/.bash_alias
+echo 'alias hpc-dataCleaning="Rscript ~/.HPC_tidymass/src/R/04.DataCleaning.R"' >> ~/.bash_alias
+echo 'alias hpc-annotation="~/Rscript .HPC_tidymass/src/R/05.Metabolomics_annotation.R"' >> ~/.bash_alias
+echo 'alias hpc-annoFiltering="Rscript ~/.HPC_tidymass/src/R/06.Annotation_filtering.R"' >> ~/.bash_alias
 
 source ~/.bash_alias
 
