@@ -6,7 +6,7 @@
 #       Location: HENU
 ##################################
 # import packages ---------------------------------------------------------
-
+library(tidymass)
 suppressMessages(if (!require('devtools')) BiocManager::install('devtools'))
 suppressMessages(if (!require('tidyverse')) BiocManager::install('tidyverse'))
 suppressMessages(if (!require('patchwork')) BiocManager::install('patchwork'))
@@ -182,7 +182,7 @@ if(heterogeneous=="no"){
   object.neg.mv <-
     object.neg %>%
     activate_mass_dataset(what = "variable_info") %>%
-    filter(na_freq < 0.2 & na_freq.q < 0.5)
+    filter(na_freq < 0.2 & na_freq.1 < 0.5)
 } else {
   object.neg.mv <-
     object.neg %>%
@@ -290,7 +290,13 @@ plt_rsd_BandA <-
     )
 ggsave(filename = "04.normalization/NEG/plt_rsd_BandA.png",width = 8,height = 7)
 ggsave(filename = "04.normalization/NEG/plt_rsd_BandA.pdf",width = 8,height = 7)
-object_neg <- object_inte_neg
+
+##> remove features with large rsd
+neg_rsd = plt_rsd_BandA$rsd_tbl
+object_neg <- object_inte_neg %>% 
+  activate_mass_dataset('variable_info') %>% 
+  left_join(neg_rsd,by = c('variable_id' = 'ID') ) %>% 
+  filter(norm.rsd <= 30)
 save(object_neg,file = "object_neg.rds")
 
 # Positive model ----------------------------------------------------------
@@ -399,7 +405,7 @@ if(heterogeneous=="no"){
   object.pos.mv <-
     object.pos %>%
     activate_mass_dataset(what = "variable_info") %>%
-    filter(na_freq < 0.2 & na_freq.q < 0.5)
+    filter(na_freq < 0.2 & na_freq.1 < 0.5)
 } else {
   object.pos.mv <-
     object.pos %>%
@@ -511,5 +517,11 @@ plt_rsd_BandA <-
 ggsave(filename = "04.normalization/POS/plt_rsd_BandA.png",width = 8,height = 7)
 ggsave(filename = "04.normalization/POS/plt_rsd_BandA.pdf",width = 8,height = 7)
 
-object_pos <- object_inte_pos
+##> remove features with large rsd
+pos_rsd = plt_rsd_BandA$rsd_tbl
+object_pos <- object_inte_pos %>% 
+  activate_mass_dataset('variable_info') %>% 
+  left_join(pos_rsd,by = c('variable_id' = 'ID')) %>% 
+  filter(norm.rsd <= 30)
+
 save(object_pos,file = "object_pos.rds")
