@@ -16,8 +16,10 @@ message(crayon::green("Running original filtering!"))
 # annotation filtering ----------------------------------------------------
 ##> variable data
 ##> 
+object_neg_anno.respect = object_neg_list[[1]]
+object_pos_anno.respect = object_pos_list[[1]]
 vari_info_neg <-
-  object_pos_list[[1]] %>% 
+  object_neg_anno.respect %>% 
   extract_variable_info() %>% 
   select(variable_id,mz,rt,contains("na_freq"),norm.rsd)
 vari_info_pos <-
@@ -35,18 +37,12 @@ feature_annotation_all <-
     out = rbind(anno_tbl.pos,anno_tbl.neg)
     return(out)
   }) %>% distinct() %>% arrange(variable_id)
-## remove duplicated features
 feature_annotation_all <-
-  left_join(vari_info,feature_annotation_all,by = "variable_id") %>% 
-  mutate(
-    mw.check = case_when(
-      str_detect(variable_id,"NEG") ~ floor(mz)+1,
-      str_detect(variable_id,"POS") ~ floor(mz)-1
-    ),
-    rt.check = floor(rt)
-  )
+  left_join(vari_info,feature_annotation_all,by = "variable_id")
 
+dir.create("Original_annotation",showWarnings = F,recursive = T)
 
+writexl::write_xlsx(x = feature_annotation_all,path = "Original_annotation/01.Original_FeatureAnnotation.xlsx")
 
 expmat_all_clean_feature.pos <- 
   object_pos_anno.respect %>% 
@@ -54,7 +50,7 @@ expmat_all_clean_feature.pos <-
     rownames_to_column("variable_id")
 
 expmat_all_clean_feature.neg <- 
-  object_pos_list[[1]] %>% 
+  object_neg_anno.respect %>% 
   extract_expression_data() %>% 
   rownames_to_column("variable_id")
 expmat_all <- rbind(expmat_all_clean_feature.pos,expmat_all_clean_feature.neg)
@@ -62,26 +58,12 @@ expmat_all <- rbind(expmat_all_clean_feature.pos,expmat_all_clean_feature.neg)
 writexl::write_xlsx(x = expmat_all,path = "Original_annotation/02.Original_FeatureAccumulationMatrix.xlsx")
                     
 Sample_info_all_clean_feature <- 
-  object_pos_list[[1]] %>% 
+  object_neg_anno.respect %>% 
   extract_sample_info() 
 
 writexl::write_xlsx(x = Sample_info_all_clean_feature,path = "Original_annotation/03.Original_Sample_info.xlsx")
 
-exp.mean <-
-expmat_all %>% 
-  mutate(peak.mean = rowSums(.[,-1])) %>% 
-  select(variable_id,peak.mean)
 
-feature_annotation_all <-
-  feature_annotation_all %>% 
-  left_join(exp.mean) %>% 
-  group_by(variable_id,mw.check,rt.check) %>% 
-  slice_max(peak.mean) %>% 
-  slice_head(n = 1)
-
-dir.create("Original_annotation",showWarnings = F,recursive = T)
-
-writexl::write_xlsx(x = feature_annotation_all,path = "Original_annotation/01.Original_FeatureAnnotation.xlsx")
 # Represent feature filtring ----------------------------------------------
 
 Represent_feature_anno <- 

@@ -20,13 +20,13 @@ func(){
     echo -e "\033[32mTidymass pipeline part1. Date transform ,peak picking and annotation\033[0m"
     echo -e "\033[32mUsage:\033[0m"
     echo -e "\033[32m-------------------------------\033[0m"
-    echo -e "\033[35mrunTidymass \033[32m[-i input] \033[33m[-t type] \033[33m[-s sample_info] \033[33m[-g heterogeneous] \033[31m[-c column]\033[0m"
+    echo -e "\033[35mhpc-runTidymass \033[32m[-i input] \033[33m[-t type] \033[33m[-s sample_info] \033[33m[-g heterogeneous] \033[31m[-c column]\033[0m"
     echo -e "\033[32m-------------------------------\033[0m"
     echo -e "\033[32mAuthor\033[0m Shawn Wang (shawnwang2016@126.com)"
     echo -e "\033[32m-------------------------------\n\033[0m"
-    echo -e "\033[32mDate\033[0m Tus Feb 09, 2023"
+    echo -e "\033[32mDate\033[0m Wed Nov 29, 2023"
     echo -e "\033[32m-------------------------------\n\033[0m"
-    echo -e "\033[32mVersion\033[0m V.0.0.0.99 beta"
+    echo -e "\033[32mVersion\033[0m V.0.0.1"
     echo -e "\033[32m-------------------------------\n\033[0m"
     echo -e "\033[32mDescription\033[0m"
     echo -e "\033[32m-------------------------------\n\033[0m"
@@ -78,7 +78,6 @@ echo -e "\033[32m====================================================\033[0m"
 ## step1. Project init
 
 echo -e "\033[32m====================================================\nStep1 Project init....\n==================================================== \033[0m"
-
 sample_file_path=$(readlink -f ${sample_info})
 
 mkdir -p working_dir && cd working_dir && mkdir -p 01.data 02.progress 03.result
