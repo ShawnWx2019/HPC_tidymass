@@ -6,18 +6,16 @@
 #       Location: HENU
 ##################################
 # import packages ---------------------------------------------------------
-library(tidymass)
+
 suppressMessages(if (!require('devtools')) BiocManager::install('devtools'))
 suppressMessages(if (!require('tidyverse')) BiocManager::install('tidyverse'))
 suppressMessages(if (!require('patchwork')) BiocManager::install('patchwork'))
 suppressMessages(if (!require('MDAtoolkits')) install_github(repo = "ShawnWx2019/MDAtoolkits",ref = 'master'))
-suppressMessages(if (!require('IMOtoolkits')) install_github(repo = "ShawnWx2019/IMOtoolkits"))
-# library(tidymass)
+suppressMessages(if (!require('MDAtoolkits')) install_github(repo = "ShawnWx2019/IMOtoolkits"))
+library(tidymass)
 # for negative model ------------------------------------------------------
-args <- commandArgs(T)
 
-sample_info_path <- args[2]
-heterogeneous <- args[1]
+##> 
 # load objects -------------------------------------------------------------------------
 
 
@@ -26,7 +24,7 @@ load("object.neg")
 object.neg <- object
 
 sample_info <- read.delim("injection_order_neg.txt",sep = "\t",header = F)
-sample_info2 <- read.delim(sample_info_path,sep = "\t",header = T)
+
 sample_info <-
   sample_info %>% 
   mutate(
@@ -34,21 +32,15 @@ sample_info <-
       string = V1,
       pattern = "(?<= )\\w*\\d(?=.raw)"
     ),
-    class = case_when(
+    group = case_when(
       str_detect(sample_id,"QC") ~ "QC",
       str_detect(sample_id,"S") ~ "Subject"
-    )
+    ),
+    class = group
   ) %>% 
   drop_na() %>% 
   mutate(injection.order = c(1:nrow(.))) %>% 
-  select(sample_id,injection.order,class) %>% 
-  left_join(sample_info2,by = "sample_id") %>% 
-  mutate(
-    group = case_when(
-      class == "QC" ~ "QC",
-      TRUE ~ group
-    )
-  )
+  select(sample_id,group,injection.order,class)
 
 # function ----------------------------------------------------------------
 
@@ -165,30 +157,14 @@ qc_id = object.neg %>%
   filter(class == "QC") %>%
   pull(sample_id)
 
-subject_id <- 
-  object.neg %>% 
-  activate_mass_dataset(
-    what = "sample_info"
-  ) %>% 
-  dplyr::filter(class == "Subject") %>% 
-  pull(sample_id)
-
 object.neg <-
   object.neg %>%
-  mutate_variable_na_freq(according_to_samples = qc_id) %>% 
-  mutate_variable_na_freq(according_to_samples = subject_id) 
+  mutate_variable_na_freq(according_to_samples = qc_id)
 ##> na frequence is less than 0.2 in qc samples.
-if(heterogeneous=="no"){
-  object.neg.mv <-
-    object.neg %>%
-    activate_mass_dataset(what = "variable_info") %>%
-    filter(na_freq < 0.2 & na_freq.1 < 0.5)
-} else {
-  object.neg.mv <-
-    object.neg %>%
-    activate_mass_dataset(what = "variable_info") %>%
-    filter(na_freq < 0.2)
-}
+object.neg.mv <-
+  object.neg %>%
+  activate_mass_dataset(what = "variable_info") %>%
+  filter(na_freq < 0.2)
 
 dir.create("02.remove_noise/NEG",showWarnings = F,recursive = T)
 save(object.neg.mv,file = "02.remove_noise/NEG/object.neg.mv")
@@ -205,30 +181,29 @@ plt_mv_remove_noise.neg<-
 ggsave(filename = "02.remove_noise//NEG/plt_mv_remove_noise.neg.png",plot = plt_mv_remove_noise.neg,width = 10,height = 5)
 ggsave(filename = "02.remove_noise//NEG/plt_mv_remove_noise.neg.pdf",plot = plt_mv_remove_noise.neg,width = 10,height = 5)
 
-if(heterogeneous=="no") {
-  outlier_samples.neg <-
+
+outlier_samples.neg <-
+  object.neg.mv %>% 
+  `+`(1) %>% 
+  log(2) %>% 
+  scale() %>% 
+  detect_outlier(na_percentage_cutoff = 0.8)
+
+outlier_table.neg <-
+  extract_outlier_table(outlier_samples.neg)
+
+out_name.neg <-
+  outlier_table.neg %>%
+  filter(according_to_na == TRUE) %>% 
+  rownames()
+
+##> remove outlier based on 
+if(length(out_name.neg) != 0) {
+  object.neg.mv <- 
     object.neg.mv %>% 
-    `+`(1) %>% 
-    log(2) %>% 
-    scale() %>% 
-    detect_outlier(na_percentage_cutoff = 0.8)
-  
-  outlier_table.neg <-
-    extract_outlier_table(outlier_samples.neg)
-
-  out_name.neg <-
-    outlier_table.neg %>%
-    filter(according_to_na == TRUE) %>% 
-    rownames()
-  ##> remove outlier based on 
-  if(length(out_name.neg) != 0) {
-    object.neg.mv <- 
-      object.neg.mv %>% 
-      activate_mass_dataset('expression_data') %>% 
-      select(-all_of(out_name.neg))
-  }
+    activate_mass_dataset('expression_data') %>% 
+    select(-all_of(out_name.neg))
 }
-
 
 plt_mv_remove_outlier.neg<-
   show_sample_missing_values(object = object.neg.mv, percentage = TRUE,color_by = 'group',order_by = 'injection.order')+theme1+
@@ -290,13 +265,7 @@ plt_rsd_BandA <-
     )
 ggsave(filename = "04.normalization/NEG/plt_rsd_BandA.png",width = 8,height = 7)
 ggsave(filename = "04.normalization/NEG/plt_rsd_BandA.pdf",width = 8,height = 7)
-
-##> remove features with large rsd
-neg_rsd = plt_rsd_BandA$rsd_tbl
-object_neg <- object_inte_neg %>% 
-  activate_mass_dataset('variable_info') %>% 
-  left_join(neg_rsd,by = c('variable_id' = 'ID') ) %>% 
-  filter(norm.rsd <= 30)
+object_neg <- object_inte_neg
 save(object_neg,file = "object_neg.rds")
 
 # Positive model ----------------------------------------------------------
@@ -322,14 +291,7 @@ sample_info <-
   ) %>% 
   drop_na() %>% 
   mutate(injection.order = c(1:nrow(.))) %>% 
-  select(sample_id,injection.order,class) %>% 
-  left_join(sample_info2,by = "sample_id") %>% 
-  mutate(
-    group = case_when(
-      class == "QC" ~ "QC",
-      TRUE ~ group
-    )
-  )
+  select(sample_id,group,injection.order,class)
 
 
 
@@ -385,33 +347,14 @@ qc_id = object.pos %>%
   filter(class == "QC") %>%
   pull(sample_id)
 
-subject_id <- 
-  object.pos %>% 
-  activate_mass_dataset(
-    what = "sample_info"
-  ) %>% 
-  dplyr::filter(class == "Subject") %>% 
-  pull(sample_id)
-
 object.pos <-
   object.pos %>%
-  mutate_variable_na_freq(according_to_samples = qc_id) %>% 
-  mutate_variable_na_freq(according_to_samples = subject_id)
-
+  mutate_variable_na_freq(according_to_samples = qc_id)
 ##> na frequence is less than 0.2 in qc samples.
-##> 
-
-if(heterogeneous=="no"){
-  object.pos.mv <-
-    object.pos %>%
-    activate_mass_dataset(what = "variable_info") %>%
-    filter(na_freq < 0.2 & na_freq.1 < 0.5)
-} else {
-  object.pos.mv <-
-    object.pos %>%
-    activate_mass_dataset(what = "variable_info") %>%
-    filter(na_freq < 0.2)
-}
+object.pos.mv <-
+  object.pos %>%
+  activate_mass_dataset(what = "variable_info") %>%
+  filter(na_freq < 0.2)
 
 dir.create("02.remove_noise/POS",showWarnings = F,recursive = T)
 save(object.pos.mv,file = "02.remove_noise/POS/object.pos.mv")
@@ -429,32 +372,28 @@ ggsave(filename = "02.remove_noise/POS/plt_mv_remove_noise.pos.png",plot = plt_m
 ggsave(filename = "02.remove_noise/POS/plt_mv_remove_noise.pos.pdf",plot = plt_mv_remove_noise.pos,width = 10,height = 5)
 
 ##> remove outlier
+outlier_samples.pos <-
+  object.pos.mv %>% 
+  `+`(1) %>% 
+  log(2) %>% 
+  scale() %>% 
+  detect_outlier(na_percentage_cutoff = 0.5)
 
-if(heterogeneous=="no") {
-  outlier_samples.pos <-
+outlier_table.pos <-
+  extract_outlier_table(outlier_samples.pos)
+
+out_name.pos <-
+  outlier_table.pos %>%
+  filter(according_to_na == TRUE) %>% 
+  rownames()
+
+##> remove outlier based on 
+if(length(out_name.pos) != 0) {
+  object.pos.mv <- 
     object.pos.mv %>% 
-    `+`(1) %>% 
-    log(2) %>% 
-    scale() %>% 
-    detect_outlier(na_percentage_cutoff = 0.5)
-  
-  outlier_table.pos <-
-    extract_outlier_table(outlier_samples.pos)
-  
-  out_name.pos <-
-    outlier_table.pos %>%
-    filter(according_to_na == TRUE) %>% 
-    rownames()
-  
-  ##> remove outlier based on 
-  if(length(out_name.pos) != 0) {
-    object.pos.mv <- 
-      object.pos.mv %>% 
-      activate_mass_dataset('expression_data') %>% 
-      select(-all_of(out_name.pos))
-  }
+    activate_mass_dataset('expression_data') %>% 
+    select(-all_of(out_name.pos))
 }
-
 
 plt_mv_remove_outlier.pos<-
   show_sample_missing_values(object = object.pos.mv, percentage = TRUE,color_by = 'group',order_by = 'injection.order')+theme1+
@@ -517,11 +456,5 @@ plt_rsd_BandA <-
 ggsave(filename = "04.normalization/POS/plt_rsd_BandA.png",width = 8,height = 7)
 ggsave(filename = "04.normalization/POS/plt_rsd_BandA.pdf",width = 8,height = 7)
 
-##> remove features with large rsd
-pos_rsd = plt_rsd_BandA$rsd_tbl
-object_pos <- object_inte_pos %>% 
-  activate_mass_dataset('variable_info') %>% 
-  left_join(pos_rsd,by = c('variable_id' = 'ID')) %>% 
-  filter(norm.rsd <= 30)
-
+object_pos <- object_inte_pos
 save(object_pos,file = "object_pos.rds")

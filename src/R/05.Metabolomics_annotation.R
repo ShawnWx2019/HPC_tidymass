@@ -7,8 +7,6 @@
 ######################################################################
 
 library(tidymass)
-library(IMOtoolkits)
-
 # set parameter -----------------------------------------------------------
 
 args<- commandArgs(T)
@@ -48,172 +46,225 @@ save(object_neg.ms2,file = "object_neg.ms2.rds")
 
 
 
-load("~/.HPC_tidymass/MS_db/Agri_plant_KNApSAcK_database.rda")
-load("~/.HPC_tidymass/MS_db/RIKEN_PlaSMA_database0.0.1.rda")
-load("~/.HPC_tidymass/MS_db/ReSpect_database1.0.rda")
-load("~/.HPC_tidymass/MS_db/zma_plantcyc.database.rda")
-load("~/.HPC_tidymass/MS_db/mona_database0.0.3.rda")
+load("~/.HPC_tidymass/MS_db/fiehn_hilic_database0.0.3.rda")
+load("~/.HPC_tidymass/MS_db/hmdb_database0.0.3.rda")
+load("~/.HPC_tidymass/MS_db/kegg_ms1_database0.0.3.rda")
 load("~/.HPC_tidymass/MS_db/massbank_database0.0.3.rda")
+load("~/.HPC_tidymass/MS_db/mona_database0.0.3.rda")
+load("~/.HPC_tidymass/MS_db/snyder_database_hilic0.0.3.rda")
+load("~/.HPC_tidymass/MS_db/KNApSAcK_ms1_database.rda")
+load("~/.HPC_tidymass/MS_db/plantcyc_ms1_database0.0.2.rda")
+load("~/.HPC_tidymass/MS_db/RIKEN_PlaSMA_database0.0.1.rda")
+
 
 # for ms1
 
-object_pos_anno.Agri_knapsack <-
+object_pos_anno <-
   annotate_metabolites_mass_dataset(
     object = object_pos.ms2,
     polarity = 'positive',
     ms1.match.ppm = 15,
     column = column,
-    threads = 7,
-    database = knapsack_agri_plant_db,
-    candidate.num = 10
+    threads = 100,
+    database = kegg_ms1_database0.0.3,
+    candidate.num = 2
   )
 
-object_pos_anno.plantcyc <-
+object_pos_anno <-
   annotate_metabolites_mass_dataset(
-    object = object_pos.ms2,
+    object = object_pos_anno,
     polarity = 'positive',
     ms1.match.ppm = 15,
     column = column,
-    threads = 7,
-    database = zma_plantcyc.database,
-    candidate.num = 10
+    threads = 100,
+    database = plantcyc_ms1_database0.0.2,
+    candidate.num = 2
   )
 
-
+object_pos_anno <-
+  annotate_metabolites_mass_dataset(
+    object = object_pos_anno,
+    polarity = 'positive',
+    ms1.match.ppm = 15,
+    column = column,
+    threads = 100,
+    database = KNApSAcK_ms1_database0.0.1,
+    candidate.num = 2
+  )
 # for ms2
 
-object_pos_anno.mona <-
+object_pos_anno <-
   annotate_metabolites_mass_dataset(
-    object = object_pos.ms2,
+    object = object_pos_anno,
     polarity = 'positive',
     ms1.match.ppm = 15,
     column = column,
-    threads = 20,
+    threads = 100,
+    database = snyder_database_rplc0.0.3,
+    candidate.num = 2
+  )
+
+object_pos_anno <-
+  annotate_metabolites_mass_dataset(
+    object = object_pos_anno,
+    polarity = 'positive',
+    ms1.match.ppm = 15,
+    column = column,
+    threads = 100,
     database = mona_database0.0.3,
-    candidate.num = 10
+    candidate.num = 2
   )
 
-object_pos_anno.massbank <-
+object_pos_anno <-
   annotate_metabolites_mass_dataset(
-    object = object_pos.ms2,
+    object = object_pos_anno,
     polarity = 'positive',
     ms1.match.ppm = 15,
     column = column,
-    threads = 20,
+    threads = 100,
     database = massbank_database0.0.3,
-    candidate.num = 10
+    candidate.num = 2
   )
 
-object_pos_anno.Plasma <-
+object_pos_anno <-
   annotate_metabolites_mass_dataset(
-    object = object_pos.ms2,
+    object = object_pos_anno,
     polarity = 'positive',
     ms1.match.ppm = 15,
     column = column,
     threads = 100,
-    database = PlaSMA_database,
-    candidate.num = 10
+    database = hmdb_database0.0.3,
+    candidate.num = 2
   )
 
-object_pos_anno.respect <-
+object_pos_anno <-
   annotate_metabolites_mass_dataset(
-    object = object_pos.ms2,
+    object = object_pos_anno,
     polarity = 'positive',
     ms1.match.ppm = 15,
     column = column,
     threads = 100,
-    database = ReSpect_database,
-    candidate.num = 10
+    database = fiehn_hilic_database0.0.3,
+    candidate.num = 2
   )
 
-object_pos_list = 
-  c(respect = object_pos_anno.respect,
-    plasma = object_pos_anno.Plasma,
-    mona = object_pos_anno.mona,
-    plantcyc = object_pos_anno.plantcyc,
-    knapsack = object_pos_anno.Agri_knapsack)
+object_pos_anno <-
+  annotate_metabolites_mass_dataset(
+    object = object_pos_anno,
+    polarity = 'positive',
+    ms1.match.ppm = 15,
+    column = column,
+    threads = 100,
+    database = RIKEN_PlaSMA_database0.0.1,
+    candidate.num = 2
+  )
 
-save(object_pos_list,file = "object_pos_anno.rds")
+save(object_pos_anno,file = "object_pos_anno.rds")
 
 
 # neg ---------------------------------------------------------------------
 
-object_neg_anno.Agri_knapsack <-
+object_neg_anno <-
   annotate_metabolites_mass_dataset(
     object = object_neg.ms2,
     polarity = 'negative',
     ms1.match.ppm = 15,
     column = column,
-    threads = 7,
-    database = knapsack_agri_plant_db,
-    candidate.num = 10
+    threads = 100,
+    database = kegg_ms1_database0.0.3,
+    candidate.num = 2
   )
 
-object_neg_anno.plantcyc <-
+object_neg_anno <-
   annotate_metabolites_mass_dataset(
-    object = object_neg.ms2,
+    object = object_neg_anno,
     polarity = 'negative',
     ms1.match.ppm = 15,
     column = column,
-    threads = 7,
-    database = zma_plantcyc.database,
-    candidate.num = 10
+    threads = 100,
+    database = plantcyc_ms1_database0.0.2,
+    candidate.num = 2
   )
 
-
+object_neg_anno <-
+  annotate_metabolites_mass_dataset(
+    object = object_neg_anno,
+    polarity = 'negative',
+    ms1.match.ppm = 15,
+    column = column,
+    threads = 100,
+    database = KNApSAcK_ms1_database0.0.1,
+    candidate.num = 2
+  )
 # for ms2
 
-object_neg_anno.mona <-
+object_neg_anno <-
   annotate_metabolites_mass_dataset(
-    object = object_neg.ms2,
+    object = object_neg_anno,
     polarity = 'negative',
     ms1.match.ppm = 15,
     column = column,
-    threads = 20,
+    threads = 100,
+    database = snyder_database_rplc0.0.3,
+    candidate.num = 2
+  )
+
+object_neg_anno <-
+  annotate_metabolites_mass_dataset(
+    object = object_neg_anno,
+    polarity = 'negative',
+    ms1.match.ppm = 15,
+    column = column,
+    threads = 100,
     database = mona_database0.0.3,
-    candidate.num = 10
+    candidate.num = 2
   )
 
-object_neg_anno.massbank <-
+object_neg_anno <-
   annotate_metabolites_mass_dataset(
-    object = object_neg.ms2,
+    object = object_neg_anno,
     polarity = 'negative',
     ms1.match.ppm = 15,
     column = column,
-    threads = 20,
+    threads = 100,
     database = massbank_database0.0.3,
-    candidate.num = 10
+    candidate.num = 2
   )
 
-object_neg_anno.Plasma <-
+object_neg_anno <-
   annotate_metabolites_mass_dataset(
-    object = object_neg.ms2,
+    object = object_neg_anno,
     polarity = 'negative',
     ms1.match.ppm = 15,
     column = column,
     threads = 100,
-    database = PlaSMA_database,
-    candidate.num = 10
+    database = hmdb_database0.0.3,
+    candidate.num = 2
   )
 
-object_neg_anno.respect <-
+object_neg_anno <-
   annotate_metabolites_mass_dataset(
-    object = object_neg.ms2,
+    object = object_neg_anno,
     polarity = 'negative',
     ms1.match.ppm = 15,
     column = column,
     threads = 100,
-    database = ReSpect_database,
-    candidate.num = 10
+    database = fiehn_hilic_database0.0.3,
+    candidate.num = 2
   )
 
-object_neg_list = 
-  c(respect = object_neg_anno.respect,
-   plasma = object_neg_anno.Plasma,
-   mona = object_neg_anno.mona,
-   plantcyc = object_neg_anno.plantcyc,
-   knapsack = object_neg_anno.Agri_knapsack)
-save(object_neg_list,file = "object_neg_anno.rds")
+object_neg_anno <-
+  annotate_metabolites_mass_dataset(
+    object = object_neg_anno,
+    polarity = 'negative',
+    ms1.match.ppm = 15,
+    column = column,
+    threads = 100,
+    database = RIKEN_PlaSMA_database0.0.1,
+    candidate.num = 2
+  )
 
 
+
+save(object_neg_anno,file = "object_neg_anno.rds")
 
