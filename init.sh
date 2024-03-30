@@ -21,7 +21,7 @@ then
 	cp -r src ~/.HPC_tidymass/src
 	cp -r MS_db ~/.HPC_tidymass/MS_db
 else
-	mkdir ~/.HPC_tidymass && cd ~/.HPC_tidymass
+	mkdir ~/.HPC_tidymass
 	cp -r src ~/.HPC_tidymass/src
 	cp -r MS_db ~/.HPC_tidymass/MS_db
 	touch ~/.bash_alias && echo "source ~/.bash_alias" >> ~/.bashrc
